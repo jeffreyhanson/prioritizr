@@ -1,0 +1,201 @@
+#' @export
+#' @rdname prioritize
+prioritize_gurobi <- function(pm,
+                              gap = 1e-4,
+                              time_limit = Inf,
+                              first_feasible = FALSE,
+                              bound = NA_real_) {
+  UseMethod("prioritize_gurobi")
+}
+
+#' @export
+#' @rdname prioritize
+prioritize_gurobi.minsetcover_model <- function(
+  pm,
+  gap = 1e-4,
+  time_limit = Inf,
+  first_feasible = FALSE,
+  bound = NA_real_) {
+  # assertions on arguments
+  assert_that(requireNamespace("gurobi", quietly = TRUE),
+              assertthat::is.number(gap),
+              gap >= 0,
+              assertthat::is.number(time_limit),
+              time_limit > 0,
+              assertthat::is.flag(first_feasible),
+              assertthat::is.number(bound))
+
+  # construct model
+  model <- list()
+  # goal is to minimize objective function
+  model$modelsense <- "min"
+  # binary decision variables
+  model$vtype <- "B"
+  # objective function
+  model$obj <- pm$cost
+  # constraints
+  model$A <- pm$rij
+  model$rhs <- pm$targets
+  model$sense <- rep(">=", length(pm$targets))
+  # locked planning units
+  if (length(pm$locked_in) > 0) {
+    # li_mat <- simple_triplet_matrix(
+    #   i = seq.int(length(pm$locked_in)),
+    #   j = pm$locked_in,
+    #   v = rep(1, length(pm$locked_in)),
+    #   ncol = ncol(model$A)
+    # )
+    # model$A <- rbind(model$A, li_mat)
+    # model$rhs <- c(model$rhs, rep(1, nrow(li_mat)))
+    # model$sense <- c(model$sense, rep("=", nrow(li_mat)))
+    # rm(li_mat)
+    model$lb <- rep(0, length(pm$cost))
+    model$lb[pm$locked_in] <- 1
+  }
+  if (length(pm$locked_out) > 0) {
+    # lo_mat <- simple_triplet_matrix(
+    #   i = seq.int(length(pm$locked_out)),
+    #   j = pm$locked_out,
+    #   v = rep(1, length(pm$locked_out)),
+    #   ncol = ncol(model$A)
+    # )
+    # model$A <- rbind(model$A, lo_mat)
+    # model$rhs <- c(model$rhs, rep(0, nrow(lo_mat)))
+    # model$sense <- c(model$sense, rep("=", nrow(lo_mat)))
+    # rm(lo_mat)
+    model$ub <- rep(1, length(pm$cost))
+    model$ub[pm$locked_out] <- 0
+  }
+
+  # stopping conditions
+  # gap to optimality
+  params <- list(Presolve = -1, MIPGap = gap)
+  # stop after specified number of seconds
+  if (is.finite(time_limit)) {
+    params <- c(params, TimeLimit = time_limit)
+  }
+  # first feasible solution
+  if (first_feasible) {
+    params <- c(params, SolutionLimit = 1)
+  }
+
+  # solve
+  included <- pm$included
+  rm(pm)
+  t <- system.time(
+    results <- gurobi::gurobi(model, params)
+  )
+  # get rid of log file
+  if (file.exists("gurobi.log")) {
+    unlink("gurobi.log")
+  }
+
+  if (is.na(bound)) {
+    bound <- results$objbound
+  }
+
+  # if some planning units were excluded, convert back to full set
+  if (!isTRUE(included)) {
+    x <- rep(NA, length(included))
+    x[included] <- results$x
+  } else {
+    x <- results$x
+  }
+  # prepare return object
+  structure(
+    list(
+      x = as.integer(round(x)),
+      objval = results$objval,
+      objbound = bound,
+      gap = (results$objval / bound - 1),
+      time = summary(t)[["user"]]
+    ),
+    class = "prioritizr_results"
+  )
+}
+
+#' @export
+#' @rdname prioritize
+prioritize_gurobi.maxcover_model <- function(
+  pm,
+  gap = 1e-4,
+  time_limit = Inf,
+  first_feasible = FALSE,
+  bound = NA_real_) {
+  # assertions on arguments
+  assert_that(requireNamespace("gurobi", quietly = TRUE),
+              assertthat::is.number(gap),
+              gap >= 0,
+              assertthat::is.number(time_limit),
+              time_limit > 0,
+              assertthat::is.flag(first_feasible),
+              assertthat::is.number(bound))
+
+  # construct model
+  model <- list()
+  # goal is to minimize objective function
+  model$modelsense <- "max"
+  # binary decision variables
+  model$vtype <- "B"
+  # objective function
+  model$obj <- slam::col_sums(pm$rij)
+  # constraints
+  model$A <- matrix(unname(pm$cost[]), nrow = 1)
+  model$rhs <- pm$budget
+  model$sense <- "<="
+  # locked planning units
+  if (length(pm$locked_in) > 0) {
+    model$lb <- rep(0, length(pm$cost))
+    model$lb[pm$locked_in] <- 1
+  }
+  if (length(pm$locked_out) > 0) {
+    model$ub <- rep(1, length(pm$cost))
+    model$ub[pm$locked_out] <- 0
+  }
+
+  # stopping conditions
+  # gap to optimality
+  params <- list(Presolve = -1, MIPGap = gap)
+  # stop after specified number of seconds
+  if (is.finite(time_limit)) {
+    params <- c(params, TimeLimit = time_limit)
+  }
+  # first feasible solution
+  if (first_feasible) {
+    params <- c(params, SolutionLimit = 1)
+  }
+
+  # solve
+  included <- pm$included
+  rm(pm)
+  t <- system.time(
+    results <- gurobi::gurobi(model, params)
+  )
+  # get rid of log file
+  if (file.exists("gurobi.log")) {
+    unlink("gurobi.log")
+  }
+
+  if (is.na(bound)) {
+    bound <- results$objbound
+  }
+
+  # if some planning units were excluded, convert back to full set
+  if (!isTRUE(included)) {
+    x <- rep(NA, length(included))
+    x[included] <- results$x
+  } else {
+    x <- results$x
+  }
+  # prepare return object
+  structure(
+    list(
+      x = as.integer(round(results$x)),
+      objval = results$objval,
+      objbound = bound,
+      gap = (results$objval / bound - 1),
+      time = summary(t)[["user"]]
+    ),
+    class = "prioritizr_results"
+  )
+}
