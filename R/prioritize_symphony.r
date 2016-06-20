@@ -9,7 +9,6 @@ prioritize_symphony <- function(pm,
 }
 
 #' @export
-#' @rdname prioritize
 prioritize_symphony.minsetcover_model <- function(
   pm,
   gap = 1e-4,
@@ -84,21 +83,22 @@ prioritize_symphony.minsetcover_model <- function(
       # stop after specified number of seconds
       time_limit = ifelse(is.finite(time_limit), time_limit, -1),
       # first feasible solution
-      first_feasible = first_feasible
+      first_feasible = first_feasible,
+      verbosity = 1
     )
   })
 
   # if some planning units were excluded, convert back to full set
   if (!isTRUE(pm$included)) {
     x <- rep(NA, length(pm$included))
-    x[pm$included] <- results$x
+    x[pm$included] <- results$solution
   } else {
-    x <- results$x
+    x <- results$solution
   }
   # prepare return object
   structure(
     list(
-      x = as.integer(round(results$solution)),
+      x = as.integer(round(x)),
       objval = results$objval,
       objbound = bound,
       gap = (results$objval / bound - 1),
@@ -109,7 +109,6 @@ prioritize_symphony.minsetcover_model <- function(
 }
 
 #' @export
-#' @rdname prioritize
 prioritize_symphony.maxcover_model <- function(
   pm,
   gap = 1e-4,
@@ -171,7 +170,7 @@ prioritize_symphony.maxcover_model <- function(
       # objective function
       obj = slam::col_sums(pm$rij),
       # constraints
-      mat = matrix(unname(pm$cost[]), nrow = 1),
+      mat = matrix(unname(pm$cost), nrow = 1),
       dir = "<=",
       rhs = pm$budget,
       # binary decision variables
@@ -185,21 +184,22 @@ prioritize_symphony.maxcover_model <- function(
       # stop after specified number of seconds
       time_limit = ifelse(is.finite(time_limit), time_limit, -1),
       # first feasible solution
-      first_feasible = first_feasible
+      first_feasible = first_feasible,
+      verbosity = 1
     )
   })
 
   # if some planning units were excluded, convert back to full set
   if (!isTRUE(pm$included)) {
     x <- rep(NA, length(pm$included))
-    x[pm$included] <- results$x
+    x[pm$included] <- results$solution
   } else {
-    x <- results$x
+    x <- results$solution
   }
   # prepare return object
   structure(
     list(
-      x = as.integer(round(results$solution)),
+      x = as.integer(round(x)),
       objval = results$objval,
       objbound = bound,
       gap = (results$objval / bound - 1),

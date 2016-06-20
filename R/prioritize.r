@@ -7,7 +7,8 @@
 #' interface to a variety of optimization packages and gives the user the
 #' ability to chose which to use based on the availability on their machine.
 #' Choosing a solver is done via the \code{solver} argument of the
-#' \code{prioritize()} function.
+#' \code{prioritize()} function, or by invoking one of the \code{prioritize_*}
+#' functions.
 #'
 #' @section Prioritization problems:
 #'
@@ -135,20 +136,20 @@
 #'
 #' # prepare minimum set cover prioritization model
 #' # use 20% targets
-#' msc_model <- minsetcover_model(pu = cost, features = f, targets = 0.2)
+#' msc_model <- minsetcover_model(x = cost, features = f, targets = 0.2)
 #' # solve to within 1 percent of optimality
 #' # pick solver automatically (uses Gurobi if installed)
 #' msc_results <- prioritize(msc_model, gap = 0.001)
 #' plot_selection(cost, msc_results$x)
 #' # specify SYMPHONY solver
 #' msc_results_symphony <- prioritize(msc_model, solver = "symphony",
-#' gap = 0.001)
+#'                                    gap = 0.001)
 #' plot_selection(cost, msc_results_symphony$x)
 #'
 #' # prepare maximum coverage prioritization model
 #' # set budget to 25% of total cost
 #' b_25 <- 0.25 * raster::cellStats(cost, "sum")
-#' mc_model <- maxcover_model(pu = cost, features = f, budget = b_25)
+#' mc_model <- maxcover_model(x = cost, features = f, budget = b_25)
 #' # solve to within 1 percent of optimality
 #' # pick solver automatically (uses Gurobi if installed)
 #' mc_results <- prioritize(mc_model, gap = 0.001)
@@ -179,8 +180,8 @@ prioritize <- function(pm,
       solver <- "symphony"
     } else if (requireNamespace("lpsymphony", quietly = TRUE)) {
       solver <- "symphony"
-    # } else if (requireNamespace("glpkAPI", quietly = TRUE)) {
-    #   solver <- "glpk"
+    } else if (requireNamespace("glpkAPI", quietly = TRUE)) {
+       solver <- "glpk"
     } else {
       stop("No ILP solvers installed.")
     }
@@ -192,6 +193,12 @@ prioritize <- function(pm,
   } else if (solver == "symphony") {
     pr <- prioritize_symphony(pm = pm, gap = gap, time_limit = time_limit,
                               first_feasible = first_feasible, bound = bound)
+  } else if (solver == "glpk") {
+    if (first_feasible) {
+      stop("first_feasible = FALSE not permitted for GLPK solver.")
+    }
+    pr <- prioritize_glpk(pm = pm, gap = gap, time_limit = time_limit,
+                          bound = bound)
   } else {
     stop("Invalid solver.")
   }

@@ -20,11 +20,16 @@ Imports:
     rgeos,
     rasterVis,
     methods,
-    tidyr
+    tidyr,
+    viridis
 Suggests:
     marxan,
     gurobi,
     lpsymphony,
-    Rsymphony
+    Rsymphony,
+    knitr,
+    rmarkdown,
+    glpkAPI
 URL: https://github.com/mstrimas/prioritizr
 BugReports: https://github.com/mstrimas/prioritizr/issues
+VignetteBuilder: knitr

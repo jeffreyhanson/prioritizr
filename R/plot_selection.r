@@ -33,9 +33,9 @@ plot_selection <- function(pu, x, title, colours, axes, ...) {
 
 #' @export
 plot_selection.Raster <- function(pu, x,
-                                        title = "Selected Planning Units",
-                                        colours = c("grey40", "#4DAF4A"),
-                                        axes = FALSE, ...) {
+                                  title = "Selected Planning Units",
+                                  colours = c("grey40", "#4DAF4A"),
+                                  axes = FALSE, ...) {
   # assertions
   assert_that(length(x) == raster::ncell(pu),
               is.logical(x) || all(x %in% c(0,1)),
@@ -57,15 +57,15 @@ plot_selection.Raster <- function(pu, x,
   rat$status <- c("Not Selected", "Selected")
   levels(pu) <- rat
   rasterVis::levelplot(pu, main = title, scales = list(draw = axes),
-            col.regions = colours,
-            colorkey = list(space = "bottom", height = 1), ...)
+                       col.regions = colours,
+                       colorkey = list(space = "bottom", height = 1), ...)
 }
 
 #' @export
 plot_selection.SpatialPolygons <- function(pu, x,
-                                            title = "Selected Planning Units",
-                                            colours = c("grey40", "#4DAF4A"),
-                                            axes = FALSE, ...) {
+                                           title = "Selected Planning Units",
+                                           colours = c("grey40", "#4DAF4A"),
+                                           axes = FALSE, ...) {
   # assertions
   assert_that(length(x) == length(pu),
               is.logical(x) || all(x %in% c(0,1)),

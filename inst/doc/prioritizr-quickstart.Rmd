@@ -1,18 +1,28 @@
 ---
-output: github_document
+title: "Getting Started with `prioritizr`"
+author: "Matt Strimas-Mackey"
+date: "`r Sys.Date()`"
+output:
+  html_document:
+    toc: true
+    toc_depth: 2
+    theme: united
+vignette: >
+  %\VignetteIndexEntry{Vignette Title}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
 ---
-
-<!-- README.md is generated from README.Rmd. Please edit that file -->
 
 ```{r, echo = FALSE}
 knitr::opts_chunk$set(
   collapse = TRUE,
   comment = "#>",
-  fig.path = "README/"
+  fig.path = "figures/quickstart_",
+  fig.align = "center"
 )
 ```
 
-# Conservation Prioritization with Integer Programming in R
+# Introduction
 
 `prioritizr` is an R package for solving systematic conservation prioritization problems using the techniques of integer linear programming (ILP). In particular, both the minimum set cover (Marxan-like) and maximum coverage reserve design problems can be solved. The package offers a unified interface to a variety of commercial and open-source ILP solvers. In contrast to heuristic methods, such as simulated annealing, the ILP methods used by `prioritizr` can find exact solutions to optimization problems.
 
@@ -26,20 +36,7 @@ SYMPHONY: `Rsymphony` (on CRAN) and `lpsymphony` (on Bioconductor). On Windows a
 - The GNU Linear Programming Kit ([GLPK](https://www.gnu.org/software/glpk/)) is an open-source package for solving linear and integer linear programs. The R package
 glpkAPI provides an interface to the low-level GLPK API.
 
-# Installation
-
-```{r install, eval=FALSE}
-if (packageVersion("devtools") < 1.6) {
-  install.packages("devtools")
-}
-devtools::install_github("mstrimas/prioritizr")
-```
-
-# Example usage
-
-For full details on this package, consult the vignette with `browseVignettes("prioritizr")`. What follows are some simple example of how this package can be used to solve conservation prioritization problems.
-
-## Required Packages
+This vignette is a simple, quickstart guide, for full details on this package, consult the complete vignette with `vignette("prioritizr")`. What follows are some simple example of how this package can be used to solve conservation prioritization problems.
 
 ```{r packages, message=FALSE}
 library(prioritizr)
@@ -48,7 +45,7 @@ library(rasterVis)
 library(viridis)
 ```
 
-## Data generation
+# Data generation
 
 The function `gaussian_field()` can be used to generate spatially auto-correlated random fields, to be used as semi-realistic spatial variables. All conservation prioritization problems involve balancing a trade-off between representing features of conservation interest and minimizing the cost of protection. Therefore we start by generating distributions for four species and a cost layer, all on a 100x100 raster grid of planning units.
 
@@ -70,10 +67,10 @@ levelplot(species, main = 'Species Distributions', layout = c(2, 2),
 # genrate cost layer
 cost <- gaussian_field(r, 20, mean = 1000, variance = 500)
 cost <- setNames(cost, "cost")
-levelplot(cost, main = "Cost", margin = FALSE, col.regions = viridis)
+levelplot(cost, main = "Cost", margin = FALSE, col.regions = viridis::viridis(100))
 ```
 
-## Minimum set cover problem
+# Minimum set cover problem
 
 In the context of systematic reserve design, the minimum set cover problem seeks to find the set of planning units that minimizes the overall cost of a reserve network, while meeting a set of representation targets for the conservation features. The cost is often either the area of the planning units or the opportunity cost of foregone commercial activities (e.g. logging or agriculture). The representation targets ensure that each species is adequately represented in the reserve network.
 
@@ -81,11 +78,11 @@ This problem is equivalent to a simplified Marxan reserve design problem,
 with the Boundary Length Modifier (BLM) set to zero. To specify a prioritization model of this type we use the `minsetcover_model()` function to create a `minsetcover_model` S3 object. This function takes data in a variety of formats (raster, vector, or tabular) and generates a standard object encapsulating the prioritization problem. Here we set targets for all species to protect 20% of their existing range.
 
 ```{r msc_model}
-msc_model <- minsetcover_model(x = cost, features = species, targets = 0.2)
+msc_model <- minsetcover_model(pu = cost, features = species, targets = 0.2)
 class(msc_model)
 ```
 
-## Maximum coverage problem
+# Maximum coverage problem
 
 The maximum coverage problem seeks to find the set of planning units that maximizes the overall level of representation across a suite of conservation features, while keeping cost within a fixed budget. The cost is often either the area of the planning units or the opportunity cost of foregone commercial activities (e.g. from logging or agriculture). Representation level is typically given by the occupancy within each planning unit, however, some measure of abundance or probability of occurrence may also be used.
 
@@ -93,11 +90,11 @@ This problem is roughly the opposite of what the conservation planning software 
 
 ```{r mc_model}
 b_25 <- 0.25 * raster::cellStats(cost, "sum")
-mc_model <- maxcover_model(x = cost, features = species, budget = b_25)
+mc_model <- maxcover_model(pu = cost, features = species, budget = b_25)
 class(mc_model)
 ```
 
-## Solving prioritization problems
+# Solving prioritization problems
 
 The function `prioritize()` offers a unified interface to solving either type of prioritization problem using any of the available solvers. To solve the minimum set cover problem to within 0.1% of optimality use:
 
@@ -125,11 +122,3 @@ The objective function values for these solutions can be access with:
 msc_results$objval
 # maximum cover objective
 mc_results$objval
-```
-
-For full details on the functionality of this package, consult the vignette:
-
-```{r vignette, eval=FALSE}
-browseVignettes("prioritizr")
-```
-

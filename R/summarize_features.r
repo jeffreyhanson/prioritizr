@@ -43,8 +43,7 @@
 #' # data frame
 #' rij_df <- summarize_features(hex_grid, r_features, matrix = FALSE)
 #' head(rij_df)
-summarize_features <- function(pu, features, matrix = TRUE,
-                                          sparse = TRUE) {
+summarize_features <- function(pu, features, matrix = TRUE, sparse = TRUE) {
   # assertions
   assert_that(inherits(pu, "SpatialPolygons"),
               inherits(features, "Raster"),

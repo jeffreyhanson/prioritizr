@@ -9,7 +9,6 @@ prioritize_gurobi <- function(pm,
 }
 
 #' @export
-#' @rdname prioritize
 prioritize_gurobi.minsetcover_model <- function(
   pm,
   gap = 1e-4,
@@ -39,30 +38,10 @@ prioritize_gurobi.minsetcover_model <- function(
   model$sense <- rep(">=", length(pm$targets))
   # locked planning units
   if (length(pm$locked_in) > 0) {
-    # li_mat <- simple_triplet_matrix(
-    #   i = seq.int(length(pm$locked_in)),
-    #   j = pm$locked_in,
-    #   v = rep(1, length(pm$locked_in)),
-    #   ncol = ncol(model$A)
-    # )
-    # model$A <- rbind(model$A, li_mat)
-    # model$rhs <- c(model$rhs, rep(1, nrow(li_mat)))
-    # model$sense <- c(model$sense, rep("=", nrow(li_mat)))
-    # rm(li_mat)
     model$lb <- rep(0, length(pm$cost))
     model$lb[pm$locked_in] <- 1
   }
   if (length(pm$locked_out) > 0) {
-    # lo_mat <- simple_triplet_matrix(
-    #   i = seq.int(length(pm$locked_out)),
-    #   j = pm$locked_out,
-    #   v = rep(1, length(pm$locked_out)),
-    #   ncol = ncol(model$A)
-    # )
-    # model$A <- rbind(model$A, lo_mat)
-    # model$rhs <- c(model$rhs, rep(0, nrow(lo_mat)))
-    # model$sense <- c(model$sense, rep("=", nrow(lo_mat)))
-    # rm(lo_mat)
     model$ub <- rep(1, length(pm$cost))
     model$ub[pm$locked_out] <- 0
   }
@@ -115,7 +94,6 @@ prioritize_gurobi.minsetcover_model <- function(
 }
 
 #' @export
-#' @rdname prioritize
 prioritize_gurobi.maxcover_model <- function(
   pm,
   gap = 1e-4,
@@ -140,7 +118,7 @@ prioritize_gurobi.maxcover_model <- function(
   # objective function
   model$obj <- slam::col_sums(pm$rij)
   # constraints
-  model$A <- matrix(unname(pm$cost[]), nrow = 1)
+  model$A <- matrix(unname(pm$cost), nrow = 1)
   model$rhs <- pm$budget
   model$sense <- "<="
   # locked planning units
@@ -190,7 +168,7 @@ prioritize_gurobi.maxcover_model <- function(
   # prepare return object
   structure(
     list(
-      x = as.integer(round(results$x)),
+      x = as.integer(round(x)),
       objval = results$objval,
       objbound = bound,
       gap = (results$objval / bound - 1),
