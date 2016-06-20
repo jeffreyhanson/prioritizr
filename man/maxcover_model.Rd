@@ -2,29 +2,49 @@
 % Please edit documentation in R/maxcover_model.r
 \name{maxcover_model}
 \alias{maxcover_model}
+\alias{maxcover_model.Raster}
+\alias{maxcover_model.SpatialPolygons}
+\alias{maxcover_model.numeric}
 \title{Prepare a maximum coverage prioritization problem}
 \usage{
-maxcover_model(x, features, budget, rij, locked_in = integer(),
-  locked_out = integer())
+maxcover_model(x, ...)
+
+\method{maxcover_model}{numeric}(x, budget, rij, locked_in = integer(),
+  locked_out = integer(), ...)
+
+\method{maxcover_model}{Raster}(x, features, budget, rij,
+  locked_in = integer(), locked_out = integer(), ...)
+
+\method{maxcover_model}{SpatialPolygons}(x, features, budget, rij,
+  locked_in = integer(), locked_out = integer(), ...)
 }
 \arguments{
-\item{x}{RasterLayer or SpatialPolygonsDataFrame object; the planning
-  units to use in the reserve design exercise and their corresponding cost.
-  If a RasterLayer object is provided the cost should be stored in the cell
-  values and if a SpatialPolygonsDataFrame object is provided it should have
-  an attribute field named \code{pu}.
+\item{x}{object specifying the planning units to use in the reserve design
+  exercise and their corresponding cost. The possible types of objects are:
 
-  If \code{} is a RasterLayer, it may be desirable to exlcude some
-  planning units from the analysis, for example those outside the study
-  area. To exclude planning units, set the cost for those raster cells to
-  \code{NA}.}
+  \bold{\code{RasterLayer}}: planning units are the raster cells and cell
+  values should contain the repsective cost. If \code{x} is a RasterLayer, it
+  may be desirable to exlcude some planning units from the analysis, for
+  example those outside the study area. To exclude planning units, set the
+  cost for those raster cells to \code{NA}.
 
-\item{features}{RasterStack object; the distribution of conservation
-features. If \code{} is a Raster object then \code{features} should be
-defined on the same raster template. If \code{} is a
-SpatialPolygonsDataFrame \code{features} will be summarize over the
-polygons using \code{\link{summarize_features}}. Not required if
-\code{rij} is provided.}
+ \bold{\code{SpatialPolygonsDataFrame}}: polygons correspond to the planning
+ units and there must be an attribute field named \code{cost}.
+
+ \bold{\code{numeric vector}}: a vector of planning unit costs. In this case
+ the spatial representation of the planning units is not provided. Therefore,
+ the \code{feature} argument is ignored and the representation matrix
+ \code{rij} is required.
+
+ \bold{\code{MarxanData}}: a \code{\link[marxan]{MarxanData}} object, from
+ the \code{marxan} package, specifying a Marxan reserve design problem,
+ which is equivalent to the minimum set cover problem. The \code{marxan}
+ package can create \code{MarxanData} objects from a variety of data
+ sources, including the standard Marxan input files. Thus this is valuable
+ for those wanted to transition directly from Marxan. Note that all other
+ arguments are ignored if x is a \code{MarxanData} object.}
+
+\item{...}{additional arguments passed on to methods}
 
 \item{budget}{numeric; budget for reserve.}
 
@@ -46,6 +66,13 @@ already within protected areas.}
 \item{locked_out}{integer; indices of planning units to lock out of final
 solution. For example, it may be desirable to lock in planning units that
 are already heavily developed and therefore have little viable habitat.}
+
+\item{features}{RasterStack object; the distribution of conservation
+features. If \code{x} is a Raster object then \code{features} should be
+defined on the same raster template. If \code{x} is a
+SpatialPolygonsDataFrame \code{features} will be summarize over the
+polygons using \code{\link{summarize_features}}. Not required if
+\code{rij} is provided.}
 }
 \value{
 A \code{maxcoverage_model} object describing the prioritization
@@ -83,6 +110,16 @@ In the context of systematic reserve design, the maximum coverage
   This problem is roughly the opposite of what the conservation planning
   software Marxan does.
 }
+\section{Methods (by class)}{
+\itemize{
+\item \code{numeric}: Numeric vector of costs
+
+\item \code{Raster}: RasterLayer of planning units and corresponding
+costs
+
+\item \code{SpatialPolygons}: SpatialPolygonsData frame of planning units with
+cost attribute
+}}
 \examples{
 # 5x5 raster template
 e <- raster::extent(0, 1, 0, 1)

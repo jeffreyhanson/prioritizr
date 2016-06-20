@@ -175,7 +175,7 @@ levelplot(cost, main = &quot;Cost&quot;, margin = FALSE, col.regions = viridis::
 <h2>Minimum set cover problem</h2>
 <p>In the context of systematic reserve design, the minimum set cover problem seeks to find the set of planning units that minimizes the overall cost of a reserve network, while meeting a set of representation targets for the conservation features. The cost is often either the area of the planning units or the opportunity cost of foregone commercial activities (e.g. logging or agriculture). The representation targets ensure that each species is adequately represented in the reserve network.</p>
 <p>This problem is equivalent to a simplified Marxan reserve design problem, with the Boundary Length Modifier (BLM) set to zero. To specify a prioritization model of this type we use the <code>minsetcover_model()</code> function to create a <code>minsetcover_model</code> S3 object. This function takes data in a variety of formats (raster, vector, or tabular) and generates a standard object encapsulating the prioritization problem. Here we set targets for all species to protect 20% of their existing range.</p>
-<pre class="r"><code>msc_model &lt;- minsetcover_model(pu = cost, features = species, targets = 0.2)
+<pre class="r"><code>msc_model &lt;- minsetcover_model(x = cost, features = species, targets = 0.2)
 class(msc_model)
 #&gt; [1] &quot;minsetcover_model&quot; &quot;prioritizr_model&quot;</code></pre>
 </div>
@@ -184,7 +184,7 @@ class(msc_model)
 <p>The maximum coverage problem seeks to find the set of planning units that maximizes the overall level of representation across a suite of conservation features, while keeping cost within a fixed budget. The cost is often either the area of the planning units or the opportunity cost of foregone commercial activities (e.g. from logging or agriculture). Representation level is typically given by the occupancy within each planning unit, however, some measure of abundance or probability of occurrence may also be used.</p>
 <p>This problem is roughly the opposite of what the conservation planning software Marxan does. To specify a prioritization model of this type we use the <code>maxcover_model()</code> function to create a <code>maxcover_model</code> S3 object. This function takes data in a variety of formats (raster, vector, or tabular) and generates a standard object encapsulating the prioritization problem. Here we set the budget to 25% of the total cost of the study area.</p>
 <pre class="r"><code>b_25 &lt;- 0.25 * raster::cellStats(cost, &quot;sum&quot;)
-mc_model &lt;- maxcover_model(pu = cost, features = species, budget = b_25)
+mc_model &lt;- maxcover_model(x = cost, features = species, budget = b_25)
 class(mc_model)
 #&gt; [1] &quot;maxcover_model&quot;   &quot;prioritizr_model&quot;</code></pre>
 </div>

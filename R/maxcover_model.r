@@ -17,39 +17,8 @@
 #'   This problem is roughly the opposite of what the conservation planning
 #'   software Marxan does.
 #'
-#' @param x RasterLayer or SpatialPolygonsDataFrame object; the planning
-#'   units to use in the reserve design exercise and their corresponding cost.
-#'   If a RasterLayer object is provided the cost should be stored in the cell
-#'   values and if a SpatialPolygonsDataFrame object is provided it should have
-#'   an attribute field named \code{pu}.
-#'
-#'   If \code{} is a RasterLayer, it may be desirable to exlcude some
-#'   planning units from the analysis, for example those outside the study
-#'   area. To exclude planning units, set the cost for those raster cells to
-#'   \code{NA}.
-#' @param features RasterStack object; the distribution of conservation
-#'   features. If \code{} is a Raster object then \code{features} should be
-#'   defined on the same raster template. If \code{} is a
-#'   SpatialPolygonsDataFrame \code{features} will be summarize over the
-#'   polygons using \code{\link{summarize_features}}. Not required if
-#'   \code{rij} is provided.
 #' @param budget numeric; budget for reserve.
-#' @param rij numeric matrix (optional); matrix of representation levels of
-#'   conservation features (rows) within planning units (columns). \code{rij}
-#'   can be a sparse matrix from the \code{slam} package (i.e. a
-#'   \code{\link[slam]{simple_triplet_matrix}}) or a normal base matrix object.
-#'   Alternatively, a data frame representation of this matrix with three
-#'   variables: feature index (\code{rij$feature}), planning unit index
-#'   (\code{rij$pu}), and corresponding representation level
-#'   (\code{rij$amount}). If this matrix is not provided it will be calculated
-#'   based on the planning units and RasterStack of conservation feature
-#'   distributions.
-#' @param locked_in integer; indices of planning units to lock in to final
-#'   solution. For example, it may be desirable to lock in planning units
-#'   already within protected areas.
-#' @param locked_out integer; indices of planning units to lock out of final
-#'   solution. For example, it may be desirable to lock in planning units that
-#'   are already heavily developed and therefore have little viable habitat.
+#' @inheritParams minsetcover_model
 #'
 #' @return A \code{maxcoverage_model} object describing the prioritization
 #'   problem to be solved. This is an S3 object consisting of a list with the
@@ -118,19 +87,16 @@
 #' # units is less efficient.
 #' cost_spdf <- raster::rasterToPolygons(cost)
 #' model_spdf <- maxcover_model(x = cost_spdf, features = f, budget = b_25)
-maxcover_model <- function(x, features, budget, rij,
-                           locked_in = integer(),
-                           locked_out = integer())  {
+maxcover_model <- function(x, ...)  {
   UseMethod("maxcover_model")
 }
 
 #' @export
 #' @describeIn maxcover_model Numeric vector of costs
 maxcover_model.numeric <- function(
-  x, features, budget, rij,
+  x, budget, rij,
   locked_in = integer(),
-  locked_out = integer(),
-  target_type = c("relative", "absolute")) {
+  locked_out = integer(), ...) {
   # assertions on arguments
   assert_that(all(is.finite(x)),
               is_integer(locked_in),
@@ -143,7 +109,7 @@ maxcover_model.numeric <- function(
               length(intersect(locked_in, locked_out)) == 0,
               assertthat::is.number(budget), budget > 0,
               # budget isn't exceeded by locked in cells
-              sum(x[locked_in], na.rm = TRUE) <= budget
+              sum(x[locked_in], na.rm = TRUE) <= budget,
               !missing(rij),
               inherits(rij, c("matrix", "simple_triplet_matrix",
                               "data.frame")))
@@ -179,7 +145,7 @@ maxcover_model.numeric <- function(
 maxcover_model.Raster <- function(
   x, features, budget, rij,
   locked_in = integer(),
-  locked_out = integer()) {
+  locked_out = integer(), ...) {
   # assertions on arguments
   assert_that(raster::nlayers(x) == 1,
               is_integer(locked_in),
@@ -279,7 +245,7 @@ maxcover_model.Raster <- function(
 maxcover_model.SpatialPolygons <- function(
   x, features, budget, rij,
   locked_in = integer(),
-  locked_out = integer()) {
+  locked_out = integer(), ...) {
   # assertions on arguments
   assert_that("cost" %in% names(x),
               is.numeric(x$cost), all(is.finite(x$cost)),

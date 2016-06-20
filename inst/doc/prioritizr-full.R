@@ -33,12 +33,12 @@ cost <- setNames(cost, "cost")
 levelplot(cost, main = "Cost", margin = FALSE, col.regions = viridis::viridis(100))
 
 ## ----msc_model-----------------------------------------------------------
-msc_model <- minsetcover_model(pu = cost, features = species, targets = 0.2)
+msc_model <- minsetcover_model(x = cost, features = species, targets = 0.2)
 class(msc_model)
 
 ## ----mc_model------------------------------------------------------------
 b_25 <- 0.25 * raster::cellStats(cost, "sum")
-mc_model <- maxcover_model(pu = cost, features = species, budget = b_25)
+mc_model <- maxcover_model(x = cost, features = species, budget = b_25)
 class(mc_model)
 
 ## ----msc_solve, results="hide"-------------------------------------------

@@ -2,25 +2,26 @@
 % Please edit documentation in R/minsetcover_model.r
 \name{minsetcover_model}
 \alias{minsetcover_model}
+\alias{minsetcover_model.MarxanData}
 \alias{minsetcover_model.Raster}
 \alias{minsetcover_model.SpatialPolygons}
 \alias{minsetcover_model.numeric}
 \title{Prepare a minimum set cover prioritization problem}
 \usage{
-minsetcover_model(x, features, targets, rij, locked_in = integer(),
-  locked_out = integer(), target_type = c("relative", "absolute"))
+minsetcover_model(x, ...)
 
-\method{minsetcover_model}{numeric}(x, features, targets, rij,
-  locked_in = integer(), locked_out = integer(),
-  target_type = c("relative", "absolute"))
+\method{minsetcover_model}{numeric}(x, targets, rij, locked_in = integer(),
+  locked_out = integer(), target_type = c("relative", "absolute"), ...)
 
 \method{minsetcover_model}{Raster}(x, features, targets, rij,
   locked_in = integer(), locked_out = integer(),
-  target_type = c("relative", "absolute"))
+  target_type = c("relative", "absolute"), ...)
 
 \method{minsetcover_model}{SpatialPolygons}(x, features, targets, rij,
   locked_in = integer(), locked_out = integer(),
-  target_type = c("relative", "absolute"))
+  target_type = c("relative", "absolute"), ...)
+
+\method{minsetcover_model}{MarxanData}(x, ...)
 }
 \arguments{
 \item{x}{object specifying the planning units to use in the reserve design
@@ -38,14 +39,17 @@ minsetcover_model(x, features, targets, rij, locked_in = integer(),
  \bold{\code{numeric vector}}: a vector of planning unit costs. In this case
  the spatial representation of the planning units is not provided. Therefore,
  the \code{feature} argument is ignored and the representation matrix
- \code{rij} is required.}
+ \code{rij} is required.
 
-\item{features}{RasterStack object; the distribution of conservation
-features. If \code{x} is a Raster object then \code{features} should be
-defined on the same raster template. If \code{x} is a
-SpatialPolygonsDataFrame \code{features} will be summarize over the
-polygons using \code{\link{summarize_features}}. Not required if
-\code{rij} is provided.}
+ \bold{\code{MarxanData}}: a \code{\link[marxan]{MarxanData}} object, from
+ the \code{marxan} package, specifying a Marxan reserve design problem,
+ which is equivalent to the minimum set cover problem. The \code{marxan}
+ package can create \code{MarxanData} objects from a variety of data
+ sources, including the standard Marxan input files. Thus this is valuable
+ for those wanted to transition directly from Marxan. Note that all other
+ arguments are ignored if x is a \code{MarxanData} object.}
+
+\item{...}{additional arguments passed on to methods}
 
 \item{targets}{numeric; representation targets either as proportion (between
 0 and 1) of total representation level when \code{target_type = "relative"}
@@ -75,6 +79,13 @@ are already heavily developed and therefore have little viable habitat.}
 \item{target_type}{"relative" or "absolute"; specifies whether the
 \code{target} argument should be interpreted as relative to the total level
 of representation or as an absolute target}
+
+\item{features}{RasterStack object; the distribution of conservation
+features. If \code{x} is a Raster object then \code{features} should be
+defined on the same raster template. If \code{x} is a
+SpatialPolygonsDataFrame \code{features} will be summarize over the
+polygons using \code{\link{summarize_features}}. Not required if
+\code{rij} is provided.}
 }
 \value{
 A \code{minsetcover_model} object describing the prioritization
@@ -118,8 +129,10 @@ In the context of systematic reserve design, the minimum set cover
 \item \code{Raster}: RasterLayer of planning units and corresponding
 costs
 
-\item \code{SpatialPolygons}: SpatialPolygonsData frame of planning units with
-cost attribute
+\item \code{SpatialPolygons}: SpatialPolygonsData frame of planning units
+withcost attribute
+
+\item \code{MarxanData}: Specify model based on Marxan inputs
 }}
 \examples{
 # 5x5 raster template
@@ -180,6 +193,13 @@ model_na$rij
 # units is less efficient.
 cost_spdf <- raster::rasterToPolygons(cost)
 model_spdf <- minsetcover_model(x = cost_spdf, features = f, targets = 0.2)
+
+# planning units don't necessarily need to be supplied explicitly
+# instead, cost can be given as a numeric vector provided the representation
+# matrix (rij) is also provided
+cost_vec <- cost[]
+rep_mat <- unname(t(f[]))
+model_nopu <- minsetcover_model(x = cost_vec, rij = rep_mat, targets = 0.2)
 }
 \seealso{
 \code{\link{maxcover_model}} for the maximum cover problem.

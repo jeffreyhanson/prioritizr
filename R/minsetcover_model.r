@@ -32,6 +32,14 @@
 #'  the spatial representation of the planning units is not provided. Therefore,
 #'  the \code{feature} argument is ignored and the representation matrix
 #'  \code{rij} is required.
+#'
+#'  \bold{\code{MarxanData}}: a \code{\link[marxan]{MarxanData}} object, from
+#'  the \code{marxan} package, specifying a Marxan reserve design problem,
+#'  which is equivalent to the minimum set cover problem. The \code{marxan}
+#'  package can create \code{MarxanData} objects from a variety of data
+#'  sources, including the standard Marxan input files. Thus this is valuable
+#'  for those wanted to transition directly from Marxan. Note that all other
+#'  arguments are ignored if x is a \code{MarxanData} object.
 #' @param features RasterStack object; the distribution of conservation
 #'   features. If \code{x} is a Raster object then \code{features} should be
 #'   defined on the same raster template. If \code{x} is a
@@ -62,6 +70,7 @@
 #' @param target_type "relative" or "absolute"; specifies whether the
 #'   \code{target} argument should be interpreted as relative to the total level
 #'   of representation or as an absolute target
+#' @param ... additional arguments passed on to methods
 #'
 #' @return A \code{minsetcover_model} object describing the prioritization
 #'   problem to be solved. This is an S3 object consisting of a list with the
@@ -147,20 +156,17 @@
 #' cost_vec <- cost[]
 #' rep_mat <- unname(t(f[]))
 #' model_nopu <- minsetcover_model(x = cost_vec, rij = rep_mat, targets = 0.2)
-minsetcover_model <- function(x, features, targets, rij,
-                              locked_in = integer(),
-                              locked_out = integer(),
-                              target_type = c("relative", "absolute"))  {
+minsetcover_model <- function(x, ...)  {
   UseMethod("minsetcover_model")
 }
 
 #' @export
 #' @describeIn minsetcover_model Numeric vector of costs
 minsetcover_model.numeric <- function(
-  x, features, targets, rij,
+  x, targets, rij,
   locked_in = integer(),
   locked_out = integer(),
-  target_type = c("relative", "absolute")) {
+  target_type = c("relative", "absolute"), ...) {
   # assertions on arguments
   assert_that(all(is.finite(x)),
               is_integer(locked_in),
@@ -223,7 +229,7 @@ minsetcover_model.Raster <- function(
   x, features, targets, rij,
   locked_in = integer(),
   locked_out = integer(),
-  target_type = c("relative", "absolute")) {
+  target_type = c("relative", "absolute"), ...) {
   # assertions on arguments
   assert_that(raster::nlayers(x) == 1,
               is_integer(locked_in),
@@ -337,7 +343,7 @@ minsetcover_model.SpatialPolygons <- function(
   x, features, targets, rij,
   locked_in = integer(),
   locked_out = integer(),
-  target_type = c("relative", "absolute")) {
+  target_type = c("relative", "absolute"), ...) {
   # assertions on arguments
   assert_that("cost" %in% names(x),
               is.numeric(x$cost), all(is.finite(x$cost)),
@@ -401,4 +407,54 @@ minsetcover_model.SpatialPolygons <- function(
     ),
     class = c("minsetcover_model", "prioritizr_model")
   )
+}
+
+#' @export
+#' @describeIn minsetcover_model Specify model based on Marxan inputs
+minsetcover_model.MarxanData <- function(x, ...) {
+  # data frame of planning unit cost and status
+  pu <- dplyr::arrange_(x@pu, ~id)
+  # need to be careful because id field not necessarily an index
+  pu$index <- seq.int(nrow(pu))
+  # cost of planning units
+  cost <- pu$cost
+  # locked planning units
+  locked_in <- which(pu$status == 2)
+  locked_out <- which(pu$status == 3)
+
+  # data frame of species and targets
+  features <- dplyr::arrange_(x@species, ~id)
+  # need to be careful because id field not necessarily an index
+  features$index <- seq.int(nrow(features))
+
+  # convert id to index in representation matrix
+  rij <- dplyr::arrange_(x@puvspecies, ~species, ~pu)
+  rij <- dplyr::rename_(rij, feature_id = ~species, pu_id = ~pu)
+  rij$feature <- features$index[match(rij$feature_id, features$id)]
+  rij$pu <- pu$index[match(rij$pu_id, pu$id)]
+  rij <- dplyr::select_(rij, ~feature, ~pu, ~amount)
+  rij <- df_to_matrix(rij,
+                      nrow = nrow(features),
+                      ncol = length(cost),
+                      vars = c("feature", "pu", "amount"))
+
+  # targets may be relative, convert to absolute
+  target <- features$target
+  if (is.character(target)) {
+    # subset to targets given as percent
+    rows <- features$index[grep("%$", target)]
+    # convert from character ("10%") to numeric (0.1)
+    pct_targ <- as.numeric(gsub("%", "", target[rows], fixed = TRUE))
+    pct_targ <- pct_targ / 100
+    assert_that(all(pct_targ >= 0), all(pct_targ <= 1))
+    # convert to absolute
+    tot_amt <- slam::row_sums(rij)
+    target[rows] <-  pct_targ * tot_amt[rows]
+  }
+  targets <- as.numeric(target)
+
+  # call method for numeric cost vector
+  minsetcover_model.numeric(x = cost, targets = targets, rij = rij,
+                            locked_in = locked_in, locked_out = locked_out,
+                            target_type = "absolute")
 }
