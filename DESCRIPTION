@@ -1,7 +1,7 @@
 Package: prioritizr
 Type: Package
 Title: Systematic Conservation Prioritization in R
-Version: 0.1.0
+Version: 0.1.1
 Authors@R: "Matthew Strimas-Mackey <mstrimas@gmail.com> [aut,cre]"
 Description: Solve Marxan-like systematic reserve design problems using integer
     programming techniques.
