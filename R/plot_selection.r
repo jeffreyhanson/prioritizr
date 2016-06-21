@@ -38,7 +38,7 @@ plot_selection.Raster <- function(pu, x,
                                   axes = FALSE, ...) {
   # assertions
   assert_that(length(x) == raster::ncell(pu),
-              is.logical(x) || all(x %in% c(0,1)),
+              is.logical(x) || all(x %in% c(0,1,NA)),
               assertthat::is.flag(axes),
               is.character(colours), length(colours) == 2,
               assertthat::is.string(title))
@@ -68,7 +68,7 @@ plot_selection.SpatialPolygons <- function(pu, x,
                                            axes = FALSE, ...) {
   # assertions
   assert_that(length(x) == length(pu),
-              is.logical(x) || all(x %in% c(0,1)),
+              is.logical(x) || all(x %in% c(0,1, NA)),
               assertthat::is.flag(axes),
               is.character(colours), length(colours) == 2,
               assertthat::is.string(title))
