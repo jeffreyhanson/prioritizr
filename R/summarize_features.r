@@ -9,7 +9,7 @@
 #' @param features RasterStack object; distribution of features over study area
 #'   where each feature is a seperate layer in the RasterStack.
 #' @param matrix logical; whether to return a matrix (\code{TRUE}) or data frame
-#'   (\code{FALSE}).s
+#'   (\code{FALSE}).
 #' @param sparse logical; whether to return a normal matrix or a sparse matrix
 #'   as implemented by the \code{slam} package. Sparse matrices only explicitly
 #'   store non-zero elements, which uses less memory.

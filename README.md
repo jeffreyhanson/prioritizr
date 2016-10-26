@@ -79,7 +79,7 @@ In the context of systematic reserve design, the minimum set cover problem seeks
 This problem is equivalent to a simplified Marxan reserve design problem, with the Boundary Length Modifier (BLM) set to zero. To specify a prioritization model of this type we use the `minsetcover_model()` function to create a `minsetcover_model` S3 object. This function takes data in a variety of formats (raster, vector, or tabular) and generates a standard object encapsulating the prioritization problem. Here we set targets for all species to protect 20% of their existing range.
 
 ``` r
-msc_model <- minsetcover_model(pu = cost, features = species, targets = 0.2)
+msc_model <- minsetcover_model(x = cost, features = species, targets = 0.2)
 class(msc_model)
 #> [1] "minsetcover_model" "prioritizr_model"
 ```
@@ -93,7 +93,7 @@ This problem is roughly the opposite of what the conservation planning software 
 
 ``` r
 b_25 <- 0.25 * raster::cellStats(cost, "sum")
-mc_model <- maxcover_model(pu = cost, features = species, budget = b_25)
+mc_model <- maxcover_model(x = cost, features = species, budget = b_25)
 class(mc_model)
 #> [1] "maxcover_model"   "prioritizr_model"
 ```

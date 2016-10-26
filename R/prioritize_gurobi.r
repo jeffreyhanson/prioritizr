@@ -4,7 +4,8 @@ prioritize_gurobi <- function(pm,
                               gap = 1e-4,
                               time_limit = Inf,
                               first_feasible = FALSE,
-                              bound = NA_real_) {
+                              bound = NA_real_,
+                              threads = 0) {
   UseMethod("prioritize_gurobi")
 }
 
@@ -14,7 +15,8 @@ prioritize_gurobi.minsetcover_model <- function(
   gap = 1e-4,
   time_limit = Inf,
   first_feasible = FALSE,
-  bound = NA_real_) {
+  bound = NA_real_,
+  threads = 0) {
   # assertions on arguments
   assert_that(requireNamespace("gurobi", quietly = TRUE),
               assertthat::is.number(gap),
@@ -22,7 +24,8 @@ prioritize_gurobi.minsetcover_model <- function(
               assertthat::is.number(time_limit),
               time_limit > 0,
               assertthat::is.flag(first_feasible),
-              assertthat::is.number(bound))
+              assertthat::is.number(bound),
+              is_integer(threads), length(threads) == 1)
 
   # construct model
   model <- list()
@@ -56,6 +59,10 @@ prioritize_gurobi.minsetcover_model <- function(
   # first feasible solution
   if (first_feasible) {
     params <- c(params, SolutionLimit = 1)
+  }
+  # number of threads
+  if (threads > 0) {
+    params <- c(params, Threads = threads)
   }
 
   # solve
@@ -99,7 +106,8 @@ prioritize_gurobi.maxcover_model <- function(
   gap = 1e-4,
   time_limit = Inf,
   first_feasible = FALSE,
-  bound = NA_real_) {
+  bound = NA_real_,
+  threads = 0) {
   # assertions on arguments
   assert_that(requireNamespace("gurobi", quietly = TRUE),
               assertthat::is.number(gap),
@@ -107,7 +115,8 @@ prioritize_gurobi.maxcover_model <- function(
               assertthat::is.number(time_limit),
               time_limit > 0,
               assertthat::is.flag(first_feasible),
-              assertthat::is.number(bound))
+              assertthat::is.number(bound),
+              is_integer(threads), length(threads) == 1)
 
   # construct model
   model <- list()
@@ -141,6 +150,10 @@ prioritize_gurobi.maxcover_model <- function(
   # first feasible solution
   if (first_feasible) {
     params <- c(params, SolutionLimit = 1)
+  }
+  # number of threads
+  if (threads > 0) {
+    params <- c(params, Threads = threads)
   }
 
   # solve

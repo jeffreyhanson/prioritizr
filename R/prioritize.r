@@ -99,6 +99,9 @@
 #'   solvers won't, in which case, this argument can be supplied if the bound is
 #'   known from some other source. This value is only used to calculate the
 #'   optimality gap and will have no effect on the operation of the solver.
+#' @param threads non-negative integer; the number of threads to use for the
+#'   optimization algorithm. The default value of 0 will result in all cores in
+#'   the machine being used. Currently only implemented for Gurobi.
 #'
 #' @return A \code{prioritizr_results} object containing the solution to the
 #'   prioritization problem. This is an S3 object consisting of a list with the
@@ -162,7 +165,8 @@ prioritize <- function(pm,
                        gap = 1e-4,
                        time_limit = Inf,
                        first_feasible = FALSE,
-                       bound = NA_real_) {
+                       bound = NA_real_,
+                       threads = 0) {
   # assertions on arguments
   solver <- match.arg(solver)
   assert_that(inherits(pm, "prioritizr_model"),
@@ -171,7 +175,8 @@ prioritize <- function(pm,
               assertthat::is.number(time_limit),
               time_limit > 0,
               assertthat::is.flag(first_feasible),
-              assertthat::is.number(bound))
+              assertthat::is.number(bound),
+              is_integer(threads), length(threads) == 1)
   # choose best solver
   if (solver == "best") {
     if (requireNamespace("gurobi", quietly = TRUE)) {
@@ -189,7 +194,8 @@ prioritize <- function(pm,
   # pick solver
   if (solver == "gurobi") {
     pr <- prioritize_gurobi(pm = pm, gap = gap, time_limit = time_limit,
-                            first_feasible = first_feasible, bound = bound)
+                            first_feasible = first_feasible, bound = bound,
+                            threads = threads)
   } else if (solver == "symphony") {
     pr <- prioritize_symphony(pm = pm, gap = gap, time_limit = time_limit,
                               first_feasible = first_feasible, bound = bound)

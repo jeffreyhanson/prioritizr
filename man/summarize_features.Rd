@@ -13,7 +13,7 @@ summarize_features(pu, features, matrix = TRUE, sparse = TRUE)
 where each feature is a seperate layer in the RasterStack.}
 
 \item{matrix}{logical; whether to return a matrix (\code{TRUE}) or data frame
-(\code{FALSE}).s}
+(\code{FALSE}).}
 
 \item{sparse}{logical; whether to return a normal matrix or a sparse matrix
 as implemented by the \code{slam} package. Sparse matrices only explicitly

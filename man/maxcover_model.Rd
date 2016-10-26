@@ -82,7 +82,7 @@ A \code{maxcoverage_model} object describing the prioritization
 \itemize{
   \item \code{cost}: numeric vector of planning unit costs
   \item \code{rij}: representation matrix
-  \item \code{budget}: budger for reserve
+  \item \code{budget}: budget for reserve
   \item \code{locked_in}: indices of locked in planning units
   \item \code{locked_out}: indices of locked out planning units
   \item \code{included}: logical vector indicating which planning units are

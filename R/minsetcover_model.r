@@ -398,7 +398,7 @@ minsetcover_model.SpatialPolygons <- function(
 
   structure(
     list(
-      cost = x[],
+      cost = x$cost,
       rij = rij,
       targets = targets,
       locked_in = as.integer(locked_in),

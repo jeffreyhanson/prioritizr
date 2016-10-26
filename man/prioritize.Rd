@@ -9,13 +9,13 @@
 \usage{
 prioritize(pm, solver = c("best", "gurobi", "symphony", "glpk"),
   gap = 1e-04, time_limit = Inf, first_feasible = FALSE,
-  bound = NA_real_)
+  bound = NA_real_, threads = 0)
 
 prioritize_glpk(pm, gap = 1e-04, time_limit = Inf, first_feasible = FALSE,
   bound = NA_real_)
 
 prioritize_gurobi(pm, gap = 1e-04, time_limit = Inf,
-  first_feasible = FALSE, bound = NA_real_)
+  first_feasible = FALSE, bound = NA_real_, threads = 0)
 
 prioritize_symphony(pm, gap = 1e-04, time_limit = Inf,
   first_feasible = FALSE, bound = NA_real_)
@@ -54,6 +54,10 @@ function. Gurobi will estimate this lower bound, however, most other
 solvers won't, in which case, this argument can be supplied if the bound is
 known from some other source. This value is only used to calculate the
 optimality gap and will have no effect on the operation of the solver.}
+
+\item{threads}{non-negative integer; the number of threads to use for the
+optimization algorithm. The default value of 0 will result in all cores in
+the machine being used. Currently only implemented for Gurobi.}
 }
 \value{
 A \code{prioritizr_results} object containing the solution to the
