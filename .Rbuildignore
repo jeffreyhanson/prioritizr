@@ -3,3 +3,5 @@
 ^README\.Rmd$
 ^README\.md$
 ^README/
+^\.travis\.yml$
+^appveyor\.yml$

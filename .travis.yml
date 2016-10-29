@@ -1,0 +1,38 @@
+# R for travis: see documentation at https://docs.travis-ci.com/user/languages/r
+
+language: r
+sudo: required
+warnings_are_errors: true
+
+os:
+  - linux
+  - osx
+
+env:
+  global:
+    - _R_CHECK_FORCE_SUGGESTS_=FALSE
+
+apt_packages:
+  - libgeos-dev
+  - libgeos-c1    
+  - r-cran-rgdal
+  - r-cran-rgeos
+  - curl
+  - qpdf 
+  
+before_install: 
+  - echo "TRAVIS_OS_NAME = $TRAVIS_OS_NAME"
+  - if [ "$TRAVIS_OS_NAME" == "linux" ]; then sudo apt-get --yes --force-yes update -qq; fi;
+  - if [ "$TRAVIS_OS_NAME" == "linux" ]; then sudo apt-get install -y; fi;
+  - if [ "$TRAVIS_OS_NAME" == "osx" ]; then brew install Caskroom/cask/xquartz; fi;
+  - if [ "$TRAVIS_OS_NAME" == "osx" ]; then brew install ghostscript; fi;
+  - if [ "$TRAVIS_OS_NAME" == "osx" ]; then Rscript -e "setRepositories(ind=1:2);install.packages(c('rgdal','rgeos','RandomFieldsUtils','RandomFields'))"; fi;
+  - if [ "$TRAVIS_OS_NAME" == "osx" ]; then sudo tlmgr update --self; fi;
+  
+r_packages:
+  - covr
+  - rmarkdown
+  - testthat
+  
+after_success:
+  - Rscript -e 'covr::codecov()'
