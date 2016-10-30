@@ -29,7 +29,8 @@ Suggests:
     Rsymphony,
     knitr,
     rmarkdown,
-    glpkAPI
+    glpkAPI,
+    testthat
 URL: https://github.com/mstrimas/prioritizr
 BugReports: https://github.com/mstrimas/prioritizr/issues
 VignetteBuilder: knitr
