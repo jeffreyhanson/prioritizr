@@ -65,7 +65,7 @@ prioritize_symphony.minsetcover_model <- function(
   }
   # solve
   t <- system.time({
-    results <- Rsymphony::Rsymphony_solve_LP(
+    results <- symphony_solve_LP(
       # objective function
       obj = pm$cost,
       # constraints
@@ -166,7 +166,7 @@ prioritize_symphony.maxcover_model <- function(
 
   # solve
   t <- system.time({
-    results <- Rsymphony::Rsymphony_solve_LP(
+    results <- symphony_solve_LP(
       # objective function
       obj = slam::col_sums(pm$rij),
       # constraints
