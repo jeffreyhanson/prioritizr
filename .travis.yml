@@ -35,6 +35,10 @@ before_install:
   - if [ "$TRAVIS_OS_NAME" == "osx" ]; then Rscript -e "setRepositories(ind=1:2);install.packages(c('rgdal','rgeos','RandomFieldsUtils','RandomFields'))"; fi;
   - if [ "$TRAVIS_OS_NAME" == "osx" ]; then sudo tlmgr update --self; fi;
 
+before_script:
+  - sudo Rscript -e "source('https://bioconductor.org/biocLite.R');biocLite();biocLite('lpsymphony')"
+  - sudo Rscript -e "install.packages('glpkAPI', configure.args='--with-glpk-lib=/usr/local/lib --with-glpk-include=/usr/local/include --enable-gmp=no')"
+
 r_packages:
   - covr
   - rmarkdown
