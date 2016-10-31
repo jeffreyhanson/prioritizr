@@ -14,7 +14,6 @@ env:
 
 apt_packages:
   - r-cran-rgdal
-  - r-cran-glpkAPI
   - libgeos-dev
   - libgeos-c1
   - curl
@@ -22,11 +21,6 @@ apt_packages:
   - glpk-utils
   - libglpk-dev
   - glpk-doc
-  - coinglpk
-  - coinmumps
-  - coinmumps
-  - coinas1
-  - osi-glpk
 
 before_install: 
   - echo "TRAVIS_OS_NAME = $TRAVIS_OS_NAME"
