@@ -13,10 +13,9 @@ env:
     - _R_CHECK_FORCE_SUGGESTS_=FALSE
 
 apt_packages:
-  - libgeos-dev
-  - libgeos-c1    
   - r-cran-rgdal
-  - r-cran-rgeos
+  - libgeos-dev
+  - libgeos-c1
   - curl
   - qpdf 
   
