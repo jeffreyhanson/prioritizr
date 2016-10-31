@@ -35,6 +35,9 @@ r_packages:
   - covr
   - rmarkdown
   - testthat
-  
+
+bioc_packages:
+  - lpsymphony
+
 after_success:
   - Rscript -e 'covr::codecov()'
