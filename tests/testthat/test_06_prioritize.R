@@ -12,7 +12,7 @@ run_maxcover_tests <- function(solver='best') {
   # generate result
   sol <- prioritize(prb, solver=solver)
   # tests
-  expect_equal(sol$objval, 4) # correct expenditure
+  expect_equal(sol$objval, 2) # correct number of features with targets met
   expect_equal(sol$x, c(0,1,1,NA)) # correct solution
 }
 
