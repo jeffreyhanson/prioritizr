@@ -94,9 +94,10 @@ maxcover_model <- function(x, ...)  {
 #' @export
 #' @describeIn maxcover_model Numeric vector of costs
 maxcover_model.numeric <- function(
-  x, budget, rij,
+  x, targets, budget, rij,
   locked_in = integer(),
-  locked_out = integer(), ...) {
+  locked_out = integer(),
+  target_type = c("relative", "absolute"), ...) {
   # assertions on arguments
   assert_that(all(is.finite(x)),
               is_integer(locked_in),
@@ -111,6 +112,7 @@ maxcover_model.numeric <- function(
               # budget isn't exceeded by locked in cells
               sum(x[locked_in], na.rm = TRUE) <= budget,
               !missing(rij),
+              is.numeric(targets),
               inherits(rij, c("matrix", "simple_triplet_matrix",
                               "data.frame")))
   # representation matrix rij
@@ -126,10 +128,26 @@ maxcover_model.numeric <- function(
     stop("Representation matrix cannot have missing or non-numeric values.")
   }
 
+  # representation targets
+  target_type <- match.arg(target_type)
+  assert_that(length(targets) == rij$nrow || length(targets) == 1)
+  if (length(targets) == 1) {
+    targets <- rep(targets, rij$nrow)
+  }
+  # set proportional targets or check absolute targets
+  if (target_type == "relative") {
+    # convert relative targets to absolute targets
+    targets <- set_targets(slam::row_sums(rij), targets)
+  } else {
+    # check that all targets are attainable
+    assert_that(all(targets <= slam::row_sums(rij)))
+  }
+  
   structure(
     list(
       cost = x,
       rij = rij,
+      targets = targets,
       budget = budget,
       locked_in = sort(as.integer(locked_in)),
       locked_out = sort(as.integer(locked_out)),
@@ -143,9 +161,10 @@ maxcover_model.numeric <- function(
 #' @describeIn maxcover_model RasterLayer of planning units and corresponding
 #'   costs
 maxcover_model.Raster <- function(
-  x, features, budget, rij,
+  x, features, targets, budget, rij,
   locked_in = integer(),
-  locked_out = integer(), ...) {
+  locked_out = integer(),
+  target_type = c("relative", "absolute"), ...) {
   # assertions on arguments
   assert_that(raster::nlayers(x) == 1,
               is_integer(locked_in),
@@ -157,6 +176,7 @@ maxcover_model.Raster <- function(
               # can't be locked in and out
               length(intersect(locked_in, locked_out)) == 0,
               assertthat::is.number(budget), budget > 0,
+              is.numeric(targets),
               # budget isn't exceeded by locked in cells
               sum(x[][locked_in], na.rm = TRUE) <= budget)
 
@@ -208,6 +228,21 @@ maxcover_model.Raster <- function(
     stop("Representation matrix cannot have missing or non-numeric values.")
   }
 
+  # representation targets
+  target_type <- match.arg(target_type)
+  assert_that(length(targets) == rij$nrow || length(targets) == 1)
+  if (length(targets) == 1) {
+    targets <- rep(targets, rij$nrow)
+  }
+  # set proportional targets or check absolute targets
+  if (target_type == "relative") {
+    # convert relative targets to absolute targets
+    targets <- set_targets(slam::row_sums(rij), targets)
+  } else {
+    # check that all targets are attainable
+    assert_that(all(targets <= slam::row_sums(rij)))
+  }
+  
   # shift locked cells if some planning units are excluded
   if (!isTRUE(included)) {
     # locked in
@@ -225,11 +260,12 @@ maxcover_model.Raster <- function(
       locked_out <- which(lock)
     }
   }
-
+  
   structure(
     list(
       cost = cost,
       rij = rij,
+      targets = targets,
       budget = budget,
       locked_in = sort(as.integer(locked_in)),
       locked_out = sort(as.integer(locked_out)),
@@ -245,7 +281,8 @@ maxcover_model.Raster <- function(
 maxcover_model.SpatialPolygons <- function(
   x, features, budget, rij,
   locked_in = integer(),
-  locked_out = integer(), ...) {
+  locked_out = integer(),
+  target_type = c("relative", "absolute"), ...) {
   # assertions on arguments
   assert_that("cost" %in% names(x),
               is.numeric(x$cost), all(is.finite(x$cost)),
@@ -258,6 +295,7 @@ maxcover_model.SpatialPolygons <- function(
               # can't be locked in and out
               length(intersect(locked_in, locked_out)) == 0,
               is.numeric(budget),
+              is.numeric(targets),
               # budget isn't exceeded by locked in cells
               sum(x$cost[locked_in], na.rm = TRUE) <= budget)
 
@@ -285,6 +323,21 @@ maxcover_model.SpatialPolygons <- function(
     stop("Representation matrix cannot have missing or non-numeric values.")
   }
 
+  # representation targets
+  target_type <- match.arg(target_type)
+  assert_that(length(targets) == rij$nrow || length(targets) == 1)
+  if (length(targets) == 1) {
+    targets <- rep(targets, rij$nrow)
+  }
+  # set proportional targets or check absolute targets
+  if (target_type == "relative") {
+    # convert relative targets to absolute targets
+    targets <- set_targets(slam::row_sums(rij), targets)
+  } else {
+    # check that all targets are attainable
+    assert_that(all(targets <= slam::row_sums(rij)))
+  }
+  
   structure(
     list(
       cost = x[],

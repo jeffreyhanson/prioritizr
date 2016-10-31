@@ -125,18 +125,22 @@ prioritize_gurobi.maxcover_model <- function(
   # binary decision variables
   model$vtype <- "B"
   # objective function
-  model$obj <- slam::col_sums(pm$rij)
+  model$obj <- c(rep(0, length(pm$cost)), rep(1, length(pm$targets)))
   # constraints
-  model$A <- matrix(unname(pm$cost), nrow = 1)
-  model$rhs <- pm$budget
-  model$sense <- "<="
+  model$A <- rbind(
+    cbind(pm$rij, slam::simple_triplet_diag_matrix(v=-pm$targets)),
+    slam::simple_triplet_matrix(i=rep(1, length(pm$cost)),j=seq_along(pm$cost), v=pm$cost,
+                                nrow=1, ncol=length(pm$cost)+length(pm$targets))
+  )
+  model$rhs <- c(rep(0, length(pm$targets)), pm$budget)
+  model$sense <- c(rep('>=', length(pm$targets)), '<=')
   # locked planning units
   if (length(pm$locked_in) > 0) {
-    model$lb <- rep(0, length(pm$cost))
+    model$lb <- rep(0, length(pm$cost)+length(pm$targets))
     model$lb[pm$locked_in] <- 1
   }
   if (length(pm$locked_out) > 0) {
-    model$ub <- rep(1, length(pm$cost))
+    model$ub <- rep(1, length(pm$cost)+length(pm$targets))
     model$ub[pm$locked_out] <- 0
   }
 
@@ -171,6 +175,9 @@ prioritize_gurobi.maxcover_model <- function(
     bound <- results$objbound
   }
 
+  # remove indicator variabes
+  results$x <- results$x[seq_along(pm$cost)]
+  
   # if some planning units were excluded, convert back to full set
   if (!isTRUE(included)) {
     x <- rep(NA, length(included))
