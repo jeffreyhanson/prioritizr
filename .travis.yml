@@ -14,6 +14,7 @@ env:
 
 apt_packages:
   - r-cran-rgdal
+  - r-cran-rsymphony
   - libgeos-dev
   - libgeos-c1
   - curl
@@ -31,12 +32,17 @@ before_install:
   - if [ "$TRAVIS_OS_NAME" == "linux" ]; then Rscript -e "install.packages('http://cran.r-project.org/src/contrib/Archive/rgeos/rgeos_0.3-20.tar.gz', repos=NULL, type='source')"; fi;
   - if [ "$TRAVIS_OS_NAME" == "osx" ]; then brew install Caskroom/cask/xquartz; fi;
   - if [ "$TRAVIS_OS_NAME" == "osx" ]; then brew install ghostscript; fi;
+  - if [ "$TRAVIS_OS_NAME" == "osx" ]; then brew tap coin-or-tools/coinor; fi;
+  - if [ "$TRAVIS_OS_NAME" == "osx" ]; then brew install symphony; fi;
+  - if [ "$TRAVIS_OS_NAME" == "osx" ]; then brew install pkg-config; fi;
+  - if [ "$TRAVIS_OS_NAME" == "osx" ]; then brew install glpk; fi;
   - if [ "$TRAVIS_OS_NAME" == "osx" ]; then Rscript -e "setRepositories(ind=1:2);install.packages(c('rgdal','rgeos','RandomFieldsUtils','RandomFields'))"; fi;
   - if [ "$TRAVIS_OS_NAME" == "osx" ]; then sudo tlmgr update --self; fi;
 
 before_script:
-  - sudo Rscript -e "install.packages('glpkAPI', configure.args='--with-glpk-lib=/usr/local/lib --with-glpk-include=/usr/local/include --enable-gmp=no')"
-  - sudo apt-get install r-cran-rsymphony
+  - Rscript -e "install.packages('glpkAPI', configure.args='--with-glpk-lib=/usr/local/lib --with-glpk-include=/usr/local/include --enable-gmp=no')"
+  - Rscript -e "source('http://bioconductor.org/biocLite.R');biocLite('lpsymphony')"
+  - Rscript -e "install.packages('rsymphony', type='source')"
 
 r_packages:
   - covr
