@@ -14,6 +14,7 @@ env:
 
 apt_packages:
   - r-cran-rgdal
+  - r-cran-glpkAPI
   - libgeos-dev
   - libgeos-c1
   - curl
@@ -21,7 +22,12 @@ apt_packages:
   - glpk-utils
   - libglpk-dev
   - glpk-doc
-  
+  - coinglpk
+  - coinmumps
+  - coinmumps
+  - coinas1
+  - osi-glpk
+
 before_install: 
   - echo "TRAVIS_OS_NAME = $TRAVIS_OS_NAME"
   - echo "options(repos = c(CRAN='http://cran.rstudio.com'))" > ~/.Rprofile
@@ -29,7 +35,7 @@ before_install:
   - if [ "$TRAVIS_OS_NAME" == "linux" ]; then sudo apt-get install -y; fi;
   - if [ "$TRAVIS_OS_NAME" == "linux" ]; then Rscript -e "install.packages('sp')"; fi;
   - if [ "$TRAVIS_OS_NAME" == "linux" ]; then Rscript -e "install.packages('http://cran.r-project.org/src/contrib/Archive/rgeos/rgeos_0.3-20.tar.gz', repos=NULL, type='source')"; fi;
-  - if [ "$TRAVIS_OS_NAME" == "linux" ]; then Rscript -e "source('https://bioconductor.org/biocLite.R');biocLite();biocLite('lpsymphony')"; fi;  
+  - if [ "$TRAVIS_OS_NAME" == "linux" ]; then Rscript -e "source('http://bioconductor.org/biocLite.R');biocLite();biocLite('lpsymphony')"; fi;  
   - if [ "$TRAVIS_OS_NAME" == "osx" ]; then brew install Caskroom/cask/xquartz; fi;
   - if [ "$TRAVIS_OS_NAME" == "osx" ]; then brew install ghostscript; fi;
   - if [ "$TRAVIS_OS_NAME" == "osx" ]; then Rscript -e "setRepositories(ind=1:2);install.packages(c('rgdal','rgeos','RandomFieldsUtils','RandomFields'))"; fi;
