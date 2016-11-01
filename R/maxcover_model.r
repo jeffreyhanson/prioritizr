@@ -6,8 +6,8 @@
 #' a standardized format.
 #'
 #' @details In the context of systematic reserve design, the maximum coverage
-#'   problem seeks to find the set of planning units that maximizes the overall
-#'   level of representation across a suite of conservation features, while
+#'   problem seeks to find the set of planning units that maximizes the number
+#'   of representation targets across a suite of conservation features, while
 #'   keeping cost within a fixed budget. The cost is often either the area of
 #'   the planning units or the opportunity cost of foregone commericial
 #'   activities (e.g. from logging or agriculture). Representation level is
@@ -27,6 +27,7 @@
 #' \itemize{
 #'   \item \code{cost}: numeric vector of planning unit costs
 #'   \item \code{rij}: representation matrix
+#'   \item \code{targets}: absolute feature targets
 #'   \item \code{budget}: budget for reserve
 #'   \item \code{locked_in}: indices of locked in planning units
 #'   \item \code{locked_out}: indices of locked out planning units
@@ -54,30 +55,34 @@
 #' cost <- setNames(cost, "cost")
 #'
 #' # prepare prioritization model with budget at 25% of total cost
+#' # and targets as 50% of the features' distributions
 #' b_25 <- 0.25 * raster::cellStats(cost, "sum")
-#' model <- maxcover_model(x = cost, features = f, budget = b_25)
+#' model <- maxcover_model(x = cost, features = f, budget = b_25,
+#'                         targets = 0.5)
 #'
 #' # the representation matrix (rij) can be supplied explicitly,
 #' # in which case the features argument is no longer required
 #' rep_mat <- unname(t(f[]))
-#' model <- maxcover_model(x = cost, rij = rep_mat, budget = b_25)
+#' model <- maxcover_model(x = cost, rij = rep_mat, budget = b_25,
+#'                         targets = 0.5)
 #'
 #' # cells can be locked in or out of the final solution
 #' model <- maxcover_model(x = cost, features = f, budget = b_25,
-#'                         locked_in = 6:10,
+#'                         targets = 0.5, locked_in = 6:10,
 #'                         locked_out = 16:20)
 #'
-#' # if some cells are to be exlcuded, e.g. those outside study area, set
+#' # if some cells are to be excluded, e.g. those outside study area, set
 #' # the cost to NA for these cells.
 #' cost_na <- cost
 #' cost_na[6:10] <- NA
-#' model_na <- maxcover_model(x = cost_na, features = f, budget = b_25)
+#' model_na <- maxcover_model(x = cost_na, features = f, budget = b_25,
+#'                            targets = 0.5)
 #' # the model object now contains an included component specifying which
 #' # cells are to be included
 #' model_na$included
 #' which(!model_na$included)
 #' # note that the representation matrix now has fewer columns because
-#' # the decision variables corresponding to exlcuded cells have been removed
+#' # the decision variables corresponding to excluded cells have been removed
 #' model$rij
 #' model_na$rij
 #'
@@ -86,7 +91,8 @@
 #' # longer to execute with polygons because summarizing features over planning
 #' # units is less efficient.
 #' cost_spdf <- raster::rasterToPolygons(cost)
-#' model_spdf <- maxcover_model(x = cost_spdf, features = f, budget = b_25)
+#' model_spdf <- maxcover_model(x = cost_spdf, features = f, budget = b_25,
+#'                              targets = 0.5)
 maxcover_model <- function(x, ...)  {
   UseMethod("maxcover_model")
 }

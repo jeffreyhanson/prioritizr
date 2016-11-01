@@ -162,6 +162,7 @@ prioritize_gurobi.maxcover_model <- function(
 
   # solve
   included <- pm$included
+  n_pu <- length(pm$cost)
   rm(pm)
   t <- system.time(
     results <- gurobi::gurobi(model, params)
@@ -176,7 +177,7 @@ prioritize_gurobi.maxcover_model <- function(
   }
 
   # remove indicator variabes
-  results$x <- results$x[seq_along(pm$cost)]
+  results$x <- results$x[seq_len(n_pu)]
   
   # if some planning units were excluded, convert back to full set
   if (!isTRUE(included)) {

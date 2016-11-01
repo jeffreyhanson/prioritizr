@@ -149,7 +149,7 @@ prioritize_glpk.maxcover_model <- function(
   glpkAPI::setColsBndsObjCoefsGLPK(model, j = seq.int(n_dv),
                                    lb = NULL, ub = NULL,
                                    obj_coef = c(rep(0, length(pm$cost)), rep(1, length(pm$targets))),
-                                   type = rep(glpkAPI::GLP_FR, n_pu))
+                                   type = rep(glpkAPI::GLP_BV, n_dv))
   # binary decision variables
   glpkAPI::setColsKindGLPK(model, j = seq.int(n_dv),
                            kind = rep(glpkAPI::GLP_BV, n_dv))
@@ -157,13 +157,14 @@ prioritize_glpk.maxcover_model <- function(
   # initialize
   glpkAPI::addRowsGLPK(model, nrows = nrow(A))
   # set non-zero elements of constraint matrix
-  glpkAPI::loadMatrixGLPK(model, ne = prod(dim(A)),
+  glpkAPI::loadMatrixGLPK(model, ne = length(A$i),
                           ia = A$i, ja = A$j,
                           ra = A$v)
   # rhs
-  glpkAPI::setRowsBndsGLPK(model, i = rep(nrow(A)-1, length(pm$targets),
+  glpkAPI::setRowsBndsGLPK(model, i = seq_along(pm$targets),
                            lb = rep(0, length(pm$targets)),
-                           ub = NULL, type = glpkAPI::GLP_DOWN)
+                           ub = NULL, 
+                           type = rep(glpkAPI::GLP_LO, length(pm$targets)))
   glpkAPI::setRowsBndsGLPK(model, i = nrow(A), lb = NULL,
                            ub = pm$budget,
                            type = glpkAPI::GLP_UP)
