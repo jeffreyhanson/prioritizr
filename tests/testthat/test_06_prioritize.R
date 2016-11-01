@@ -12,7 +12,7 @@ run_maxcover_tests <- function(solver='best') {
   # generate result
   sol <- prioritize(prb, solver=solver)
   # tests
-  expect_equal(sol$objval, 2) # correct number of features with targets met
+  expect_equal(sol$objval, 22) # correct amount held
   expect_equal(sol$x, c(0,1,1,NA)) # correct solution
 }
 
@@ -32,40 +32,40 @@ run_minsetcover_tests <- function(solver='best') {
 }
 
 
-test('prioritize (best solver)', {
+test_that('prioritize (best solver)', {
   skip_on_cran()
   run_minsetcover_tests(solver='best')
   run_maxcover_tests(solver='best')
 })
 
-test('prioritize_gurobi.maxcover_model', {
+test_that('prioritize_gurobi.maxcover_model', {
   skip_if_not_installed('gurobi')
   run_maxcover_tests(solver='gurobi')
 })
 
-test('prioritize_gurobi.minsetcover_model', {
+test_that('prioritize_gurobi.minsetcover_model', {
   skip_if_not_installed('gurobi')
   run_minsetcover_tests(solver='gurobi')
 })
 
-test('prioritize_symphony.maxcover_model', {
+test_that('prioritize_symphony.maxcover_model', {
   skip_if_not(requireNamespace("Rsymphony", quietly = TRUE) | requireNamespace("lpsymphony", quietly = TRUE))
   run_maxcover_tests(solver='symphony')
 
 })
 
-test('prioritize_symphony.minsetcover_model', {
+test_that('prioritize_symphony.minsetcover_model', {
   skip_if_not(requireNamespace("Rsymphony", quietly = TRUE) | requireNamespace("lpsymphony", quietly = TRUE))
   run_minsetcover_tests(solver='symphony')
 })
 
-test('prioritize_glpk.maxcover_model', {
+test_that('prioritize_glpk.maxcover_model', {
   skip_if_not_installed('glpkAPI')
   run_maxcover_tests(solver='glpk')
 
 })
 
-test('prioritize_glpk.minsetcover_model', {
+test_that('prioritize_glpk.minsetcover_model', {
   skip_if_not_installed('glpkAPI')
   run_minsetcover_tests(solver='glpk')
 })

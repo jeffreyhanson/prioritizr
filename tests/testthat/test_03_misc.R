@@ -9,12 +9,12 @@ test_that('gaussian_field', {
   gf_binary <- gaussian_field(r, range = 5, n = 1, prop = 0.5) # binary raster
   gf_linear <-gaussian_field(r, range = 20, coef = c(0.05, 0.05)) # linear trend  
   # tests
-  expect_true(is.finite(raster::as.matrix(gf_gaussian)))
+  expect_true(all(is.finite(c(raster::as.matrix(gf_gaussian)))))
   expect_equal(raster::nlayers((gf_gaussian)), 4L)
-  expect_true(is.finite(raster::as.matrix(gf_binary)))
+  expect_true(all(is.finite(c(raster::as.matrix(gf_binary)))))
   expect_equal(raster::nlayers((gf_binary)), 1L)
-  expect_true(raster::as.matrix(gf_binary) %in% 0:1)
-  expect_true(is.finite(raster::as.matrix(gf_linear)))
+  expect_true(all(c(raster::as.matrix(gf_binary)) %in% 0:1))
+  expect_true(all(is.finite(c(raster::as.matrix(gf_linear)))))
   expect_equal(raster::nlayers((gf_linear)), 1L)
 })
 
@@ -74,8 +74,8 @@ test_that('make_grid', {
     hex_grids2 <- lapply(sq_cell_areas, function(x) {do.call(make_grid, list(x=rst, type='hexagon', cell_area=x))})
     ## run tests
     # check that geometries are correct
-    Map(test_that_grid_is_valid_for_raster, sq_grids1, list(rst, disaggregate(rst, fact=2), aggregate(rst, fact=2)), list('square')[1:3], c('normal', 'missing one cell', 'missing one row', 'all missing'))
-    Map(test_that_grid_is_valid_for_raster, hex_grids1, list(rst, disaggregate(rst, fact=2), aggregate(rst, fact=2)), list('hexagon')[1:3])
+    Map(test_that_grid_is_valid_for_raster, sq_grids1, list(rst, raster::disaggregate(rst, fact=2), raster::aggregate(rst, fact=2)), list('square')[1:3], c('normal', 'missing one cell', 'missing one row', 'all missing'))
+    Map(test_that_grid_is_valid_for_raster, hex_grids1, list(rst, raster::disaggregate(rst, fact=2), raster::aggregate(rst, fact=2)), list('hexagon')[1:3])
     # check that grids generated using corresponding cell_area and cell_width values are equal
     Map(expect_equal, sq_grids1, sq_grids2)
     Map(expect_equal, hex_grids1, hex_grids2)  
