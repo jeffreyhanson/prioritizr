@@ -29,7 +29,8 @@ A matrix of feature representation levels within planning units where
 \description{
 Summarize a RasterStack of conservation features over a set of planning unit
 polygons. If the \code{marxan} package is installed, this function is a
-wrapper for \code{\link[marxan]{calcPuVsSpeciesData}}, otherwise a much
+wrapper for \code{calcPuVsSpeciesData} from the \code{marxan} package
+(available at \url{https://github.com/jeffreyhanson/marxan}), otherwise a much
 slower implementation is used that doesn't require \code{marxan}.
 }
 \examples{
