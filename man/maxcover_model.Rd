@@ -36,8 +36,9 @@ maxcover_model(x, ...)
  the \code{feature} argument is ignored and the representation matrix
  \code{rij} is required.
 
- \bold{\code{MarxanData}}: a \code{\link[marxan]{MarxanData}} object, from
- the \code{marxan} package, specifying a Marxan reserve design problem,
+ \bold{\code{MarxanData}}: a \code{MarxanData} object, from the \code{marxan}
+  package (available at \url{https://github.com/jeffreyhanson/marxan}),
+ specifying a Marxan reserve design problem,
  which is equivalent to the minimum set cover problem. The \code{marxan}
  package can create \code{MarxanData} objects from a variety of data
  sources, including the standard Marxan input files. Thus this is valuable
