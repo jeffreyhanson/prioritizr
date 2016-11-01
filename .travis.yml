@@ -2,6 +2,7 @@
 
 language: r
 sudo: required
+dist: trusty
 warnings_are_errors: true
 
 os:
@@ -40,9 +41,9 @@ before_install:
   - if [ "$TRAVIS_OS_NAME" == "osx" ]; then sudo tlmgr update --self; fi;
 
 before_script:
+  - if [ "$TRAVIS_OS_NAME" == "osx" ]; then Rscript -e "install.packages('Rsymphony', type='source')"; fi;
   - Rscript -e "install.packages('glpkAPI', configure.args='--with-glpk-lib=/usr/local/lib --with-glpk-include=/usr/local/include --enable-gmp=no')"
   - Rscript -e "source('http://bioconductor.org/biocLite.R');biocLite('lpsymphony')"
-  - Rscript -e "install.packages('Rsymphony', type='source')"
 
 r_packages:
   - covr
