@@ -3,7 +3,8 @@
 language: r
 sudo: required
 dist: trusty
-warnings_are_errors: true
+warnings_are_errors: false
+r: release devel
 
 os:
   - linux
