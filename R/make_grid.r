@@ -68,6 +68,6 @@ make_grid <- function(x, type = c("hexagonal", "square"), cell_width, cell_area,
     g <- g[x, ]
   }
   # clean up feature IDs
-  row.names(g) <- as.character(1:length(g))
+  row.names(g) <- as.character(seq_along(g))
   return(g)
 }

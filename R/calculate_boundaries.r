@@ -113,7 +113,8 @@ calculate_boundaries.Raster <- function(x, matrix = TRUE, sparse = TRUE,
 }
 
 #' @export
-calculate_boundaries.SpatialPolygons <- function(x, matrix = TRUE, sparse = TRUE,
+calculate_boundaries.SpatialPolygons <- function(x, matrix = TRUE,
+                                                 sparse = TRUE,
                                                  triangular = FALSE,
                                                  edge_factor = 1) {
   # assertions
@@ -181,7 +182,8 @@ prepare_boundaries <- function(b, n, matrix, sparse, triangular) {
   b <- dplyr::arrange_(b, "id1", "id2")
   # construct desired return object
   if (matrix) {
-    b <- slam::simple_triplet_matrix(b$id1, b$id2, b$boundary, nrow = n, ncol = n)
+    b <- slam::simple_triplet_matrix(b$id1, b$id2, b$boundary,
+                                     nrow = n, ncol = n)
     if (!sparse) {
       b <- as.matrix(b)
     }
