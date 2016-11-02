@@ -11,7 +11,7 @@
 #' @param cell_width numeric; distance between cell centers.
 #' @param cell_area numeric; area of cell, only used if \code{cell_width} is
 #'   missing. This defaults to the resolution of the argument \code{x} if
-#'   it is a \code{\link[raster]{RasterLayer}} object.
+#'   it is a \code{\link[raster]{RasterLayer-class}} object.
 #' @param clip logical; whether or not to clip the cells to the study area
 #'   boundary.
 #'
@@ -24,11 +24,13 @@
 #' hex_grid <- make_grid(sq_grid[9,], cell_width = 0.1, type = "hexagonal", clip=TRUE)
 #' sp::plot(sq_grid, add = TRUE)
 #' sp::plot(hex_grid, add = TRUE, border = "red", lwd = 2)
-make_grid <- function(x, ...)  {
+make_grid <- function(x, type = c("hexagonal", "square"), cell_width,
+                      cell_area, clip)  {
   UseMethod("make_grid")
 }
 
 #' @export
+#' @describeIn make_grid RasterLayer input
 make_grid.Raster <- function(x, type = c("hexagonal", "square"), cell_width,
                       cell_area = prod(raster::res(x)),
                       clip = FALSE) {
@@ -42,6 +44,7 @@ make_grid.Raster <- function(x, type = c("hexagonal", "square"), cell_width,
 }
 
 #' @export
+#' @describeIn make_grid Spatial* input
 make_grid.Spatial <- function(x, type = c("hexagonal", "square"), cell_width,
                       cell_area, clip = FALSE) {
   type <- match.arg(type)
