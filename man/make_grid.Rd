@@ -2,9 +2,17 @@
 % Please edit documentation in R/make_grid.r
 \name{make_grid}
 \alias{make_grid}
+\alias{make_grid.Raster}
+\alias{make_grid.Spatial}
 \title{Create square or hexagonal grids}
 \usage{
-make_grid(x, ...)
+make_grid(x, type = c("hexagonal", "square"), cell_width, cell_area, clip)
+
+\method{make_grid}{Raster}(x, type = c("hexagonal", "square"), cell_width,
+  cell_area = prod(raster::res(x)), clip = FALSE)
+
+\method{make_grid}{Spatial}(x, type = c("hexagonal", "square"), cell_width,
+  cell_area, clip = FALSE)
 }
 \arguments{
 \item{x}{Raster* or Spatial* object; the region over which to define the
@@ -16,7 +24,7 @@ study grid.}
 
 \item{cell_area}{numeric; area of cell, only used if \code{cell_width} is
 missing. This defaults to the resolution of the argument \code{x} if
-it is a \code{\link[raster]{RasterLayer}} object.}
+it is a \code{\link[raster]{RasterLayer-class}} object.}
 
 \item{clip}{logical; whether or not to clip the cells to the study area
 boundary.}
@@ -30,6 +38,12 @@ Spatial* object defining a study area. Grids can be specified by width (i.e.
 distance between cell centres) or area, and cells at the edge of the study
 area can be optionally clipped to the study area boundary.
 }
+\section{Methods (by class)}{
+\itemize{
+\item \code{Raster}: RasterLayer input
+
+\item \code{Spatial}: Spatial* input
+}}
 \examples{
 r <- raster::raster(matrix(1:9, 3, 3))
 sq_grid <- make_grid(r, type = "square")
