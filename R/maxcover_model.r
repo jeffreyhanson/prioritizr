@@ -287,7 +287,7 @@ maxcover_model.SpatialPolygons <- function(
 
   structure(
     list(
-      cost = x[],
+      cost = x$cost,
       rij = rij,
       budget = budget,
       locked_in = as.integer(locked_in),
