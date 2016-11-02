@@ -2,6 +2,8 @@
 
 S3method(calculate_boundaries,Raster)
 S3method(calculate_boundaries,SpatialPolygons)
+S3method(make_grid,Raster)
+S3method(make_grid,Spatial)
 S3method(maxcover_model,Raster)
 S3method(maxcover_model,SpatialPolygons)
 S3method(maxcover_model,numeric)

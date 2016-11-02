@@ -10,7 +10,8 @@
 #' @param type "square" or "hexagonal"; type of grid.
 #' @param cell_width numeric; distance between cell centers.
 #' @param cell_area numeric; area of cell, only used if \code{cell_width} is
-#'   missing.
+#'   missing. This defaults to the resolution of the argument \code{x} if 
+#'   it is a \code{\link[raster]{RasterLayer}} object.
 #' @param clip logical; whether or not to clip the cells to the study area
 #'   boundary.
 #'
@@ -18,20 +19,44 @@
 #' @export
 #' @examples
 #' r <- raster::raster(matrix(1:9, 3, 3))
-#' hex_grid <- make_grid(r, cell_width = 0.4, type = "hexagonal")
+#' sq_grid <- make_grid(r, type = "square")
 #' raster::plot(r)
-#' sp::plot(hex_grid, add = TRUE)
-#' sq_grid <- make_grid(hex_grid[9, ], cell_width = 0.1, type = "square", clip = TRUE)
-#' sp::plot(sq_grid, add = TRUE, border = "red", lwd = 2)
-make_grid <- function(x, type = c("hexagonal", "square"), cell_width, cell_area,
+#' hex_grid <- make_grid(sq_grid[9,], cell_width = 0.1, type = "hexagonal", clip=TRUE)
+#' sp::plot(sq_grid, add = TRUE)
+#' sp::plot(hex_grid, add = TRUE, border = "red", lwd = 2)
+make_grid <- function(x, ...)  {
+  UseMethod("make_grid")
+}
+
+#' @export
+make_grid.Raster <- function(x, type = c("hexagonal", "square"), cell_width,
+                      cell_area = prod(raster::res(x)),
                       clip = FALSE) {
-  # assertions
+  type <- match.arg(type)
+  cell_area <- cell_area
+  assert_that(!missing(cell_width) || !missing(cell_area),
+              missing(cell_width) || assertthat::is.number(cell_width),
+              missing(cell_area) || assertthat::is.number(cell_area),
+              assertthat::is.flag(clip))
+  .make_grid(x, type, cell_width, cell_area, clip)
+}
+
+#' @export
+make_grid.Spatial <- function(x, type = c("hexagonal", "square"), cell_width,
+                      cell_area, clip = FALSE) {
   type <- match.arg(type)
   assert_that(!missing(cell_width) || !missing(cell_area),
               missing(cell_width) || assertthat::is.number(cell_width),
               missing(cell_area) || assertthat::is.number(cell_area),
-              assertthat::is.flag(clip),
-              inherits(x, c("Raster", "Spatial")))
+              assertthat::is.flag(clip))
+  .make_grid(x, type, cell_width, cell_area, clip)
+}
+
+#' @noRd
+.make_grid <- function(x, type, cell_width, cell_area, clip) {
+
+  # assertions
+  assert_that(inherits(x, c("Raster", "Spatial")))
 
   # if cell_width is missing calculate it based on cell area
   if (missing(cell_width)) {
