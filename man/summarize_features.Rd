@@ -10,7 +10,8 @@ summarize_features(pu, features, matrix = TRUE, sparse = TRUE)
 \item{pu}{SpatialPolygons* object; planning unit polygons.}
 
 \item{features}{RasterStack object; distribution of features over study area
-where each feature is a seperate layer in the RasterStack.}
+where each feature is a seperate layer in the RasterStack. Absences can be
+indicated by a cell value of zero or \code{NA}.}
 
 \item{matrix}{logical; whether to return a matrix (\code{TRUE}) or data frame
 (\code{FALSE}).}
