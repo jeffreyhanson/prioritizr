@@ -64,6 +64,7 @@ calculate_boundaries.Raster <- function(x, matrix = TRUE, sparse = TRUE,
               assertthat::is.flag(sparse),
               assertthat::is.flag(triangular),
               assertthat::is.number(edge_factor))
+  stopifnot(is.finite(edge_factor))
 
   # shared boundaries
   ud <- matrix(c(NA, NA, NA, 1, 0, 1, NA, NA, NA), 3, 3)
