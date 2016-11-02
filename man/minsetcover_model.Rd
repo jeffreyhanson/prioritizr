@@ -71,11 +71,17 @@ distributions.}
 
 \item{locked_in}{integer; indices of planning units to lock in to final
 solution. For example, it may be desirable to lock in planning units
-already within protected areas.}
+already within protected areas. Alternatively, if \code{x} is a
+\code{RasterLayer}, then \code{locked_in} can be a
+binary \code{RasterLayer} with 1s identifying the planning units to lock
+in.}
 
 \item{locked_out}{integer; indices of planning units to lock out of final
 solution. For example, it may be desirable to lock in planning units that
-are already heavily developed and therefore have little viable habitat.}
+are already heavily developed and therefore have little viable habitat.
+Alternatively, if \code{x} is a \code{RasterLayer}, then \code{locked_out}
+can be a binary \code{RasterLayer} with 1s identifying the planning units
+to lock out.}
 
 \item{target_type}{"relative" or "absolute"; specifies whether the
 \code{target} argument should be interpreted as relative to the total level
@@ -175,6 +181,15 @@ model <- minsetcover_model(x = cost, rij = rep_mat, targets = 0.2)
 model <- minsetcover_model(x = cost, features = f, targets = 0.2,
                            locked_in = 6:10,
                            locked_out = 16:20)
+# alternatively, binary rasters can be supplied indicating locked in/out
+r_locked_in <- raster::raster(r)
+r_locked_in[] <- 0
+# lock in cells 6-10
+r_locked_in[6:10] <- 1
+model_raste_lock <- minsetcover_model(
+  x = cost, features = f, targets = 0.2,
+  locked_in = r_locked_in,
+  locked_out = 16:20)
 
 # if some cells are to be exlcuded, e.g. those outside study area, set
 # the cost to NA for these cells.

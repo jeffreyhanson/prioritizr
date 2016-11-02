@@ -66,6 +66,14 @@
 #' model <- maxcover_model(x = cost, features = f, budget = b_25,
 #'                         locked_in = 6:10,
 #'                         locked_out = 16:20)
+#' # alternatively, binary rasters can be supplied indicating locked in/out
+#' r_locked_in <- raster::raster(r)
+#' r_locked_in[] <- 0
+#' # lock in cells 6-10
+#' r_locked_in[6:10] <- 1
+#' model_raste_lock <- maxcover_model(x = cost, features = f, budget = b_25,
+#'                                    locked_in = r_locked_in,
+#'                                    locked_out = 16:20)
 #'
 #' # if some cells are to be exlcuded, e.g. those outside study area, set
 #' # the cost to NA for these cells.
@@ -150,17 +158,9 @@ maxcover_model.Raster <- function(
   locked_out = integer(), ...) {
   # assertions on arguments
   assert_that(raster::nlayers(x) == 1,
-              is_integer(locked_in),
-              all(locked_in > 0),
-              all(locked_in <= raster::ncell(x)),
-              is_integer(locked_out),
-              all(locked_out > 0),
-              all(locked_out <= raster::ncell(x)),
-              # can't be locked in and out
-              length(intersect(locked_in, locked_out)) == 0,
+              is_integer(locked_in) | inherits(locked_in, "RasterLayer"),
+              is_integer(locked_out) | inherits(locked_out, "RasterLayer"),
               assertthat::is.number(budget), budget > 0,
-              # budget isn't exceeded by locked in cells
-              sum(x[][locked_in], na.rm = TRUE) <= budget,
               # budget is greater than cost of cheapest cell
               raster::cellStats(x, 'min') <= budget)
 
@@ -182,6 +182,25 @@ maxcover_model.Raster <- function(
   cost <- x[]
   # subset to included planning units
   cost <- cost[included]
+
+  # identify locked in/out planning units from raster
+  if (inherits(locked_in, "RasterLayer")) {
+    assert_that(all(locked_in[] %in% c(0, 1)))
+    locked_in <- which(locked_in[] == 1)
+  }
+  if (inherits(locked_out, "RasterLayer")) {
+    assert_that(all(locked_out[] %in% c(0, 1)))
+    locked_out <- which(locked_out[] == 1)
+  }
+  assert_that(all(locked_in > 0),
+              all(locked_in <= length(x)),
+              is_integer(locked_out),
+              all(locked_out > 0),
+              all(locked_out <= length(x)),
+              # can't be locked in and out
+              length(intersect(locked_in, locked_out)) == 0,
+              # budget isn't exceeded by locked in cells
+              sum(x[][locked_in], na.rm = TRUE) <= budget)
 
   # representation matrix rij
   if (missing(rij)) {
