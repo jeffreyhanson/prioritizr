@@ -4,8 +4,7 @@
 \alias{make_grid}
 \title{Create square or hexagonal grids}
 \usage{
-make_grid(x, type = c("hexagonal", "square"), cell_width, cell_area,
-  clip = FALSE)
+make_grid(x, ...)
 }
 \arguments{
 \item{x}{Raster* or Spatial* object; the region over which to define the
@@ -16,7 +15,8 @@ study grid.}
 \item{cell_width}{numeric; distance between cell centers.}
 
 \item{cell_area}{numeric; area of cell, only used if \code{cell_width} is
-missing.}
+missing. This defaults to the resolution of the argument \code{x} if 
+it is a \code{\link[raster]{RasterLayer}} object.}
 
 \item{clip}{logical; whether or not to clip the cells to the study area
 boundary.}
@@ -32,10 +32,10 @@ area can be optionally clipped to the study area boundary.
 }
 \examples{
 r <- raster::raster(matrix(1:9, 3, 3))
-hex_grid <- make_grid(r, cell_width = 0.4, type = "hexagonal")
+sq_grid <- make_grid(r, type = "square")
 raster::plot(r)
-sp::plot(hex_grid, add = TRUE)
-sq_grid <- make_grid(hex_grid[9, ], cell_width = 0.1, type = "square", clip = TRUE)
-sp::plot(sq_grid, add = TRUE, border = "red", lwd = 2)
+hex_grid <- make_grid(sq_grid[9,], cell_width = 0.1, type = "hexagonal", clip=TRUE)
+sp::plot(sq_grid, add = TRUE)
+sp::plot(hex_grid, add = TRUE, border = "red", lwd = 2)
 }
 
