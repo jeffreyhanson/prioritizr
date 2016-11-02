@@ -1,4 +1,4 @@
-context('minsetcover_model') 
+context('05 minsetcover_model') 
  
 test_that('numeric input', {
   # data

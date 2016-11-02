@@ -1,4 +1,4 @@
-context('maxcover_model') 
+context('04 maxcover_model') 
  
 test_that('numeric input', {
   # data
@@ -115,5 +115,7 @@ test_that('SpatialPolygons input', {
   expect_error(maxcover_model(x=cost, features=features, budget=100)) # budget is too low to reach any target
   expect_error(maxcover_model(x=raster::setValues(cost, NA), features=features, budget=NA)) # budget is not finite
   expect_error(maxcover_model(x=cost, features=raster::setValues(features, NA), budget=budget)) # there are no features in the problem
+  expect_error({cost2$cost[4] <- NA; maxcover_model(x=cost2, features=features, budget=budget)}) # cost has NA value
+  
 })
 

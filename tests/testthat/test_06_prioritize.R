@@ -1,4 +1,4 @@
-context('prioritize') 
+context('06 prioritize') 
 
 run_maxcover_tests <- function(solver='best') {
   # data

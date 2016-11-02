@@ -1,4 +1,4 @@
-context('misc functions') 
+context('03 misc functions') 
 
 test_that('gaussian_field', {
   # data
