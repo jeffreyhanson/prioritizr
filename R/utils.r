@@ -78,5 +78,11 @@ df_to_matrix <- function(x, nrow, ncol, sparse = TRUE, add_lower = FALSE,
 }
 
 is_integer <- function(x) {
-  all(floor(x) == x, na.rm = TRUE)
+  if (is.integer(x)) {
+    return(TRUE)
+  } else if (is.numeric(x)) {
+    return(all(floor(x) == x, na.rm = TRUE))
+  } else {
+    return(FALSE)
+  }
 }

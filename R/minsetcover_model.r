@@ -33,16 +33,19 @@
 #'  the \code{feature} argument is ignored and the representation matrix
 #'  \code{rij} is required.
 #'
-#'  \bold{\code{MarxanData}}: a \code{\link[marxan]{MarxanData}} object, from
-#'  the \code{marxan} package, specifying a Marxan reserve design problem,
+#'  \bold{\code{MarxanData}}: a \code{MarxanData} object, from the \code{marxan}
+#'   package (available at \url{https://github.com/jeffreyhanson/marxan}),
+#'  specifying a Marxan reserve design problem,
 #'  which is equivalent to the minimum set cover problem. The \code{marxan}
 #'  package can create \code{MarxanData} objects from a variety of data
 #'  sources, including the standard Marxan input files. Thus this is valuable
 #'  for those wanted to transition directly from Marxan. Note that all other
 #'  arguments are ignored if x is a \code{MarxanData} object.
 #' @param features RasterStack object; the distribution of conservation
-#'   features. If \code{x} is a Raster object then \code{features} should be
-#'   defined on the same raster template. If \code{x} is a
+#'   features. Missing values (i.e. \code{NA}s) can be used to indicate the
+#'   absence of a feature in a particular cell instead of explicitly setting
+#'   these cells to zero. If \code{x} is a Raster object then \code{features}
+#'   should be defined on the same raster template. If \code{x} is a
 #'   SpatialPolygonsDataFrame \code{features} will be summarize over the
 #'   polygons using \code{\link{summarize_features}}. Not required if
 #'   \code{rij} is provided.
@@ -63,10 +66,16 @@
 #'   distributions.
 #' @param locked_in integer; indices of planning units to lock in to final
 #'   solution. For example, it may be desirable to lock in planning units
-#'   already within protected areas.
+#'   already within protected areas. Alternatively, if \code{x} is a
+#'   \code{RasterLayer}, then \code{locked_in} can be a
+#'   binary \code{RasterLayer} with 1s identifying the planning units to lock
+#'   in.
 #' @param locked_out integer; indices of planning units to lock out of final
 #'   solution. For example, it may be desirable to lock in planning units that
 #'   are already heavily developed and therefore have little viable habitat.
+#'   Alternatively, if \code{x} is a \code{RasterLayer}, then \code{locked_out}
+#'   can be a binary \code{RasterLayer} with 1s identifying the planning units
+#'   to lock out.
 #' @param target_type "relative" or "absolute"; specifies whether the
 #'   \code{target} argument should be interpreted as relative to the total level
 #'   of representation or as an absolute target
@@ -128,6 +137,15 @@
 #' model <- minsetcover_model(x = cost, features = f, targets = 0.2,
 #'                            locked_in = 6:10,
 #'                            locked_out = 16:20)
+#' # alternatively, binary rasters can be supplied indicating locked in/out
+#' r_locked_in <- raster::raster(r)
+#' r_locked_in[] <- 0
+#' # lock in cells 6-10
+#' r_locked_in[6:10] <- 1
+#' model_raste_lock <- minsetcover_model(
+#'   x = cost, features = f, targets = 0.2,
+#'   locked_in = r_locked_in,
+#'   locked_out = 16:20)
 #'
 #' # if some cells are to be exlcuded, e.g. those outside study area, set
 #' # the cost to NA for these cells.
@@ -232,14 +250,8 @@ minsetcover_model.Raster <- function(
   target_type = c("relative", "absolute"), ...) {
   # assertions on arguments
   assert_that(raster::nlayers(x) == 1,
-              is_integer(locked_in),
-              all(locked_in > 0),
-              all(locked_in <= raster::ncell(x)),
-              is_integer(locked_out),
-              all(locked_out > 0),
-              all(locked_out <= raster::ncell(x)),
-              # can't be locked in and out
-              length(intersect(locked_in, locked_out)) == 0,
+              is_integer(locked_in) | inherits(locked_in, "RasterLayer"),
+              is_integer(locked_out) | inherits(locked_out, "RasterLayer"),
               is.numeric(targets))
 
   # convert 1-band RasterStack to RasterLayer
@@ -261,14 +273,33 @@ minsetcover_model.Raster <- function(
   # subset to included planning units
   cost <- cost[included]
 
+  # identify locked in/out planning units from raster
+  if (inherits(locked_in, "RasterLayer")) {
+    assert_that(all(locked_in[] %in% c(0, 1)))
+    locked_in <- which(locked_in[] == 1)
+  }
+  if (inherits(locked_out, "RasterLayer")) {
+    assert_that(all(locked_out[] %in% c(0, 1)))
+    locked_out <- which(locked_out[] == 1)
+  }
+  assert_that(all(locked_in > 0),
+              all(locked_in <= length(x)),
+              is_integer(locked_out),
+              all(locked_out > 0),
+              all(locked_out <= length(x)),
+              # can't be locked in and out
+              length(intersect(locked_in, locked_out)) == 0)
+
   # representation matrix rij
   if (missing(rij)) {
     # if not provided, calculate rij
     assert_that(inherits(features, "Raster"),
                 raster::compareRaster(x, features))
     # subset to included planning units
-    features <- features[][included,]
-    rij <- slam::as.simple_triplet_matrix(t(unname(features)))
+    features_mat <- features[][included,]
+    # assume missing values indicate absence
+    features_mat[is.na(features_mat)] <- 0
+    rij <- slam::as.simple_triplet_matrix(t(unname(features_mat)))
   } else {
     # ensure that rij is a matrix, sparse matrix, or data frame
     assert_that(inherits(rij, c("matrix", "simple_triplet_matrix",

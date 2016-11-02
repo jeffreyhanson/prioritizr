@@ -2,12 +2,14 @@
 #'
 #' Summarize a RasterStack of conservation features over a set of planning unit
 #' polygons. If the \code{marxan} package is installed, this function is a
-#' wrapper for \code{\link[marxan]{calcPuVsSpeciesData}}, otherwise a much
+#' wrapper for \code{calcPuVsSpeciesData} from the \code{marxan} package
+#' (available at \url{https://github.com/jeffreyhanson/marxan}), otherwise a much
 #' slower implementation is used that doesn't require \code{marxan}.
 #'
 #' @param pu SpatialPolygons* object; planning unit polygons.
 #' @param features RasterStack object; distribution of features over study area
-#'   where each feature is a seperate layer in the RasterStack.
+#'   where each feature is a seperate layer in the RasterStack. Absences can be
+#'   indicated by a cell value of zero or \code{NA}.
 #' @param matrix logical; whether to return a matrix (\code{TRUE}) or data frame
 #'   (\code{FALSE}).
 #' @param sparse logical; whether to return a normal matrix or a sparse matrix
@@ -53,7 +55,10 @@ summarize_features <- function(pu, features, matrix = TRUE, sparse = TRUE) {
 
   # sum raster cells over polygons
   if (requireNamespace("marxan", quietly = TRUE)) {
-    rij <- marxan::calcPuVsSpeciesData(pu, features)
+    # supress warning raised by marxan package when cell values are missing
+    rij <- suppressWarnings(
+      marxan::calcPuVsSpeciesData(pu, features)
+    )
     rij$feature <- rij$species
   } else {
     rij <- raster::extract(features, pu, fun = sum, na.rm = TRUE,
@@ -65,7 +70,7 @@ summarize_features <- function(pu, features, matrix = TRUE, sparse = TRUE) {
 
   }
   rij <- rij[c("feature", "pu", "amount")]
-  rij <- rij[rij$amount > 0, ]
+  rij <- rij[!is.na(rij$amount) & rij$amount > 0, ]
   # construct desired return object
   if (matrix) {
     rij <- slam::simple_triplet_matrix(rij$feature, rij$pu, rij$amount,
