@@ -111,7 +111,7 @@ maxcover_model.numeric <- function(
               # budget isn't exceeded by locked in cells
               sum(x[locked_in], na.rm = TRUE) <= budget,
               # budget is greater than cost of cheapest cell
-              min(x, na.rm=TRUE) < budget,
+              min(x, na.rm=TRUE) <= budget,
               !missing(rij),
               inherits(rij, c("matrix", "simple_triplet_matrix",
                               "data.frame")))
@@ -160,7 +160,9 @@ maxcover_model.Raster <- function(
               length(intersect(locked_in, locked_out)) == 0,
               assertthat::is.number(budget), budget > 0,
               # budget isn't exceeded by locked in cells
-              sum(x[][locked_in], na.rm = TRUE) <= budget)
+              sum(x[][locked_in], na.rm = TRUE) <= budget,
+              # budget is greater than cost of cheapest cell
+              raster::cellStats(x, 'min') <= budget)
 
   # convert 1-band RasterStack to RasterLayer
   x <- x[[1]]
@@ -261,7 +263,9 @@ maxcover_model.SpatialPolygons <- function(
               length(intersect(locked_in, locked_out)) == 0,
               is.numeric(budget),
               # budget isn't exceeded by locked in cells
-              sum(x$cost[locked_in], na.rm = TRUE) <= budget)
+              sum(x$cost[locked_in], na.rm = TRUE) <= budget,
+              # budget is greater than cost of cheapest cell
+              min(x$cost) <= budget)
 
   # representation matrix rij
   if (missing(rij)) {
