@@ -69,8 +69,10 @@ solution. For example, it may be desirable to lock in planning units that
 are already heavily developed and therefore have little viable habitat.}
 
 \item{features}{RasterStack object; the distribution of conservation
-features. If \code{x} is a Raster object then \code{features} should be
-defined on the same raster template. If \code{x} is a
+features. Missing values (i.e. \code{NA}s) can be used to indicate the
+absence of a feature in a particular cell instead of explicitly setting
+these cells to zero. If \code{x} is a Raster object then \code{features}
+should be defined on the same raster template. If \code{x} is a
 SpatialPolygonsDataFrame \code{features} will be summarize over the
 polygons using \code{\link{summarize_features}}. Not required if
 \code{rij} is provided.}

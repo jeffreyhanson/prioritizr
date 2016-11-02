@@ -54,7 +54,10 @@ summarize_features <- function(pu, features, matrix = TRUE, sparse = TRUE) {
 
   # sum raster cells over polygons
   if (requireNamespace("marxan", quietly = TRUE)) {
-    rij <- marxan::calcPuVsSpeciesData(pu, features)
+    # supress warning raised by marxan package when cell values are missing
+    rij <- suppressWarnings(
+      marxan::calcPuVsSpeciesData(pu, features)
+    )
     rij$feature <- rij$species
   } else {
     rij <- raster::extract(features, pu, fun = sum, na.rm = TRUE,
@@ -66,7 +69,7 @@ summarize_features <- function(pu, features, matrix = TRUE, sparse = TRUE) {
 
   }
   rij <- rij[c("feature", "pu", "amount")]
-  rij <- rij[rij$amount > 0, ]
+  rij <- rij[!is.na(rij$amount) & rij$amount > 0, ]
   # construct desired return object
   if (matrix) {
     rij <- slam::simple_triplet_matrix(rij$feature, rij$pu, rij$amount,
