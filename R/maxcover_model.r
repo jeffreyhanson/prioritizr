@@ -189,8 +189,10 @@ maxcover_model.Raster <- function(
     assert_that(inherits(features, "Raster"),
                 raster::compareRaster(x, features))
     # subset to included planning units
-    features <- features[][included,]
-    rij <- slam::as.simple_triplet_matrix(t(unname(features)))
+    features_mat <- features[][included,]
+    # assume missing values indicate absence
+    features_mat[is.na(features_mat)] <- 0
+    rij <- slam::as.simple_triplet_matrix(t(unname(features_mat)))
   } else {
     # ensure that rij is a matrix, sparse matrix, or data frame
     assert_that(inherits(rij, c("matrix", "simple_triplet_matrix",

@@ -15,7 +15,7 @@ study grid.}
 \item{cell_width}{numeric; distance between cell centers.}
 
 \item{cell_area}{numeric; area of cell, only used if \code{cell_width} is
-missing. This defaults to the resolution of the argument \code{x} if 
+missing. This defaults to the resolution of the argument \code{x} if
 it is a \code{\link[raster]{RasterLayer}} object.}
 
 \item{clip}{logical; whether or not to clip the cells to the study area
