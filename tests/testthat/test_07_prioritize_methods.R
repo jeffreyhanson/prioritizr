@@ -23,7 +23,6 @@ test_that('plot_selection', {
   x_selected <- as.vector(gaussian_field(pu_raster, 20, prop = 0.25)[])
   # test if plot is succefully made
   plot_selection(pu_raster, x_selected)
-  dev.off()
 })
 
 test_that('summarize_features', {

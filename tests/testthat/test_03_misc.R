@@ -25,37 +25,44 @@ test_that('make_grid', {
   r3 <- raster::raster(matrix(c(1:12, NA, NA, NA, NA), 4, 4)) # raster with one column of NA values
   r4 <- raster::raster(matrix(rep(NA, 16), 4, 4)) # raster with all values as NA
   # define function
-  test_that_grid_is_valid_for_raster <- function(sp, rst, type=match.arg(c('square', 'hexagonal')), label='') {
+  test_that_grid_is_valid_for_raster <- function(sp, rst, type=c('square', 'hexagonal'), label='') {
+    type <- match.arg(type)
+    label <- paste0(type, ' grid ', label)
+    n_finite_cells <- sum(!is.na(raster::as.matrix(rst)))
     expect_equal(
       length(sp@polygons),
-      sum(!is.na(raster::as.matrix(rst))),
-      info=paste0(label, ': grid has incorrect number of grid cells')
-     )
+      n_finite_cells,
+      info=paste0(label, ': grid has incorrect number of grid cells'))
     expect_equal(
       rgeos::gCentroid(sp, byid=TRUE)@coords,
       as.matrix(raster::rasterToPoints(rst, spatial=FALSE)[,1:2]),
-      info=paste0(label, ': grid has incorrect location of grid cell centroids')
-    )
-    expect_equal(rgeos::gArea(sp, byid=TRUE), prod(raster::res(rst)), info='grid has cells with incorrect area')
+      info=paste0(label, ': grid has incorrect location of grid cell centroids'))
+    expect_equal(rgeos::gArea(sp, byid=TRUE), rep(prod(raster::res(rst)), n_finite_cells),
+                 info=paste0(label, ': grid has cells with incorrect area'))
     expect_equal(
       c(sapply(
         sp@polygons,
         function(x) {
-          n.coords <- nrow(x@Polygon[[1]]@coords)-1
+          n.coords <- nrow(x@Polygons[[1]]@coords)-1
           fields::rdist.vec(
-            x@Polygon[[1]]@coords[seq_len(n.coords-1),],
-            x@Polygon[[1]]@coords[2:n.coords,]
+            x@Polygons[[1]]@coords[seq_len(n.coords-1),],
+            x@Polygons[[1]]@coords[2:n.coords,]
           )
         }
       )),
       ifelse(type=='square', raster::res(rst)[1], sqrt(2 * prod(raster::res(rs)) / sqrt(3))),
-      info=paste0(label, ': grid has cells with incorrect widths')
-    )
+      info=paste0(label, ': grid has cells with incorrect widths'))
+    expect_equal(
+      c(sapply(
+        sp@polygons,
+        function(x) {return(length(x@Polygons))}
+      )),
+      rep(1, n_finite_cells),
+      info=paste0(label, ': grid has polygons with more than one sub-polygon'))
     expect_equal(
       sapply(sp@polygons, function(x) {nrow(x@Polygons[[1]]@coords)}),
-      ifelse(type=='square', 4, 6),
-      info=paste0(label, ': grid has cells with incorrect number of vertices')
-    )
+      rep(ifelse(type=='square', 4, 6), n_finite_cells),
+      info=paste0(label, ': grid has cells with incorrect number of vertices'))
   }
   
   run_all_tests_on_raster <- function(rst) {

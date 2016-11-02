@@ -10,6 +10,7 @@ test_that('df_to_matrix', {
   # correct results
   mtx <- matrix(c(10, 0, 20, 0, 0, 0, 0, 0, 30), ncol=3, nrow=3, byrow=TRUE)
   mtx2 <- matrix(c(10, 0, 20, 0, 0, 0, 20, 0, 30), ncol=3, nrow=3, byrow=TRUE)
+  mtx5 <- matrix(c(10, 0, 20, 0, 0, 0, 0, 0, 0), ncol=3, nrow=3, byrow=TRUE)
   # tests
   expect_equal(as.matrix(df_to_matrix(df)), mtx)
   expect_equal(as.matrix(df_to_matrix(df, sparse = FALSE)), mtx)
@@ -18,7 +19,7 @@ test_that('df_to_matrix', {
   expect_error(df_to_matrix(df[,-1:-3]))
   expect_error(df_to_matrix(df3))
   expect_error(df_to_matrix(df4))
-  expect_error(df_to_matrix(df5))
+  expect_equal(as.matrix(df_to_matrix(df5)),mtx5)
 })
 
 test_that('is_integer', {
