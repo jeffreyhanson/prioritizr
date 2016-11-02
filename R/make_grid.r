@@ -10,7 +10,7 @@
 #' @param type "square" or "hexagonal"; type of grid.
 #' @param cell_width numeric; distance between cell centers.
 #' @param cell_area numeric; area of cell, only used if \code{cell_width} is
-#'   missing. This defaults to the resolution of the argument \code{x} if 
+#'   missing. This defaults to the resolution of the argument \code{x} if
 #'   it is a \code{\link[raster]{RasterLayer}} object.
 #' @param clip logical; whether or not to clip the cells to the study area
 #'   boundary.
@@ -67,7 +67,12 @@ make_grid.Spatial <- function(x, type = c("hexagonal", "square"), cell_width,
     }
   }
   # buffered extent of study area to define cells over
-  ext <- methods::as(raster::extent(x) + cell_width, "SpatialPolygons")
+  if (inherits(x, "Raster") &&
+      isTRUE(all.equal(raster::res(x) %% cell_width, c(0, 0)))) {
+    ext <- methods::as(raster::extent(x), "SpatialPolygons")
+  } else {
+    ext <- methods::as(raster::extent(x) + cell_width, "SpatialPolygons")
+  }
   raster::projection(ext) <- raster::projection(x)
   # generate grid
   if (type == "square") {
