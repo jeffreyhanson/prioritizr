@@ -39,17 +39,21 @@ test_that('summarize_features', {
   sq_grid <- as(r_features[[1]], 'SpatialPolygons')
   solution <- data.frame(feature=c(rep(1,4), rep(2,2)), pu=c(1:4, c(2,4)),
                          amount=c(c(1,3,2,4), 1, 1))
+  solution <- dplyr::arrange(solution, feature, pu, amount)
   # create objects
   rij_sparse <- summarize_features(sq_grid, r_features)
   rij_matrix <- summarize_features(sq_grid, r_features, sparse = FALSE)
   rij_df <- summarize_features(sq_grid, r_features, matrix = FALSE)
   rownames(rij_df) <- NULL
   # tests
-  expect_equal(data.frame(feature=rij_sparse$i, pu=rij_sparse$j,
-                          amount=rij_sparse$v),
-               solution)
+  expect_equal(
+    dplyr::arrange(
+      data.frame(feature=rij_sparse$i, pu=rij_sparse$j,amount=rij_sparse$v),
+      feature, pu, amount
+    ),
+    solution)
   expect_equal(as.matrix(rij_sparse), rij_matrix)
-  expect_equal(rij_df, solution)  
+  expect_equal(dplyr::arrange(rij_df, feature, pu, amount), solution)
   expect_equal(summarize_features(sq_grid,
                                   raster::setValues(r_features, NA),
                                   sparse=FALSE),

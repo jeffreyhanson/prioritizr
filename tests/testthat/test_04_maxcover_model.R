@@ -1,5 +1,5 @@
-context('04 maxcover_model') 
- 
+context('04 maxcover_model')
+
 test_that('numeric input', {
   # data
   budget <- 3.23
@@ -7,29 +7,30 @@ test_that('numeric input', {
   locked_in <- 2
   locked_out <- 4
   rij <- data.frame(feature=c(1L,1L,2L, 2L,2L), pu=c(1:2, 2:4), amount=c(1,1,10,10,10))
+  rij_mat <- as.matrix(slam::simple_triplet_matrix(rij$feature, rij$pu, rij$amount))
   # generate object
   mc1 <- maxcover_model(x=cost, rij=rij, locked_in=locked_in, locked_out=locked_out, budget=budget)
   mc2 <- maxcover_model(x=cost, rij=rij, locked_in=locked_in, budget=budget)
-  mc3 <- maxcover_model(x=cost, rij=rij, locked_out=locked_out, budget=budget) 
+  mc3 <- maxcover_model(x=cost, rij=rij, locked_out=locked_out, budget=budget)
   # tests
   expect_equal(mc1$cost, cost)
   expect_equal(mc1$locked_in, locked_in)
   expect_equal(mc1$locked_out, locked_out)
-  expect_equal(data.frame(feature=mc1$rij$i,pu=mc1$rij$j,amount=mc1$rij$v), rij)
+  expect_equal(as.matrix(mc1$rij), rij_mat)
   expect_equal(mc1$included, TRUE)
   expect_equal(mc1$budget, budget)
 
   expect_equal(mc2$cost, cost)
   expect_equal(mc2$locked_in, locked_in)
   expect_equal(mc2$locked_out, integer())
-  expect_equal(data.frame(feature=mc2$rij$i,pu=mc2$rij$j,amount=mc2$rij$v), rij)
+  expect_equal(as.matrix(mc2$rij), rij_mat)
   expect_equal(mc2$included, TRUE)
   expect_equal(mc2$budget, budget)
 
   expect_equal(mc3$cost, cost)
   expect_equal(mc3$locked_in, integer())
   expect_equal(mc3$locked_out, locked_out)
-  expect_equal(data.frame(feature=mc3$rij$i,pu=mc3$rij$j,amount=mc3$rij$v), rij)
+  expect_equal(as.matrix(mc3$rij), rij_mat)
   expect_equal(mc3$included, TRUE)
   expect_equal(mc3$budget, budget)
 
@@ -45,33 +46,34 @@ test_that('RasterLayer input', {
   locked_in <- 2
   locked_out <- 3
   rij <- data.frame(feature=c(1L,2L,1L, 2L), pu=c(1L,2L,3L,3L), amount=c(1,10,1,10))
+  rij_mat <- as.matrix(slam::simple_triplet_matrix(rij$feature, rij$pu, rij$amount))
   features1 <- raster::stack(raster::raster(matrix(c(1,1,0,0), ncol=2)), raster::raster(matrix(c(0,10,10,10), ncol=2)))
   # generate object
   mc1 <- maxcover_model(x=cost, features=features1, locked_in=locked_in, locked_out=locked_out, budget=budget)
   mc2 <- maxcover_model(x=cost, features=features1, locked_in=locked_in, budget=budget)
-  mc3 <- maxcover_model(x=cost, features=features1, locked_out=locked_out, budget=budget) 
+  mc3 <- maxcover_model(x=cost, features=features1, locked_out=locked_out, budget=budget)
   # tests
   expect_equal(mc1$cost, as.vector(na.omit(raster::getValues(cost))))
   expect_equal(mc1$locked_in, locked_in)
   expect_equal(mc1$locked_out, locked_out)
-  expect_equal(data.frame(feature=mc1$rij$i,pu=mc1$rij$j,amount=mc1$rij$v), rij)
+  expect_equal(as.matrix(mc1$rij), rij_mat)
   expect_equal(mc1$included, c(TRUE, TRUE, TRUE, FALSE))
   expect_equal(mc1$budget, budget)
-  
+
   expect_equal(mc2$cost, as.vector(na.omit(raster::getValues(cost))))
   expect_equal(mc2$locked_in, locked_in)
   expect_equal(mc2$locked_out, integer())
-  expect_equal(data.frame(feature=mc2$rij$i,pu=mc2$rij$j,amount=mc2$rij$v), rij)
+  expect_equal(as.matrix(mc2$rij), rij_mat)
   expect_equal(mc2$included, c(TRUE, TRUE, TRUE, FALSE))
   expect_equal(mc2$budget, budget)
 
   expect_equal(mc3$cost, as.vector(na.omit(raster::getValues(cost))))
   expect_equal(mc3$locked_in, integer())
   expect_equal(mc3$locked_out, locked_out)
-  expect_equal(data.frame(feature=mc3$rij$i,pu=mc3$rij$j,amount=mc3$rij$v), rij)
+  expect_equal(as.matrix(mc3$rij), rij_mat)
   expect_equal(mc3$included, c(TRUE, TRUE, TRUE, FALSE))
   expect_equal(mc3$budget, budget)
-  
+
   expect_error(maxcover_model(x=cost, features=features, budget=100)) # budget is too low to reach any target
   expect_error(maxcover_model(x=raster::setValues(cost, NA), features=features, budget=NA)) # budget is not finite
   expect_error(maxcover_model(x=cost, features=raster::setValues(features, NA), budget=budget)) # there are no features in the problem
@@ -85,30 +87,31 @@ test_that('SpatialPolygons input', {
   locked_in <- 2
   locked_out <- 3
   rij <- data.frame(feature=c(1L,1L,2L,2L), pu=c(1L,3L,2L,3L), amount=c(1,1,10,10))
+  rij_mat <- as.matrix(slam::simple_triplet_matrix(rij$feature, rij$pu, rij$amount))
   features1 <- raster::stack(raster::raster(matrix(c(1,1,0,0), ncol=2)), raster::raster(matrix(c(0,10,10,10), ncol=2)))
   # generate object
   mc1 <- maxcover_model(x=cost, features=features1, locked_in=locked_in, locked_out=locked_out, budget=budget)
   mc2 <- maxcover_model(x=cost, features=features1, locked_in=locked_in, budget=budget)
-  mc3 <- maxcover_model(x=cost, features=features1, locked_out=locked_out, budget=budget) 
+  mc3 <- maxcover_model(x=cost, features=features1, locked_out=locked_out, budget=budget)
   # tests
   expect_equal(mc1$cost, as.vector(na.omit(cost$cost)))
   expect_equal(mc1$locked_in, locked_in)
   expect_equal(mc1$locked_out, locked_out)
-  expect_equal(data.frame(feature=mc1$rij$i,pu=mc1$rij$j,amount=mc1$rij$v), rij)
+  expect_equal(as.matrix(mc1$rij), rij_mat)
   expect_equal(mc1$included, TRUE)
   expect_equal(mc1$budget, budget)
 
   expect_equal(mc2$cost, as.vector(na.omit(cost$cost)))
   expect_equal(mc2$locked_in, locked_in)
   expect_equal(mc2$locked_out, integer())
-  expect_equal(data.frame(feature=mc2$rij$i,pu=mc2$rij$j,amount=mc2$rij$v), rij)
+  expect_equal(as.matrix(mc2$rij), rij_mat)
   expect_equal(mc2$included, TRUE)
   expect_equal(mc2$budget, budget)
 
   expect_equal(mc3$cost, as.vector(na.omit(cost$cost)))
   expect_equal(mc3$locked_in, integer())
   expect_equal(mc3$locked_out, locked_out)
-  expect_equal(data.frame(feature=mc3$rij$i,pu=mc3$rij$j,amount=mc3$rij$v), rij)
+  expect_equal(as.matrix(mc3$rij), rij_mat)
   expect_equal(mc3$included, TRUE)
   expect_equal(mc3$budget, budget)
 
@@ -116,6 +119,5 @@ test_that('SpatialPolygons input', {
   expect_error(maxcover_model(x=raster::setValues(cost, NA), features=features, budget=NA)) # budget is not finite
   expect_error(maxcover_model(x=cost, features=raster::setValues(features, NA), budget=budget)) # there are no features in the problem
   expect_error({cost2$cost[4] <- NA; maxcover_model(x=cost2, features=features, budget=budget)}) # cost has NA value
-  
 })
 

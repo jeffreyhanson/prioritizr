@@ -200,6 +200,9 @@ minsetcover_model.numeric <- function(
               inherits(rij, c("matrix", "simple_triplet_matrix",
                               "data.frame")))
   # representation matrix rij
+  if (nrow(rij) == 0) {
+    stop("A prioritization problem must have at least one feature.")
+  }
   if (is.matrix(rij)) {
     rij <- slam::as.simple_triplet_matrix(unname(rij))
   } else if (is.data.frame(rij)) {
@@ -306,6 +309,9 @@ minsetcover_model.Raster <- function(
     # ensure that rij is a matrix, sparse matrix, or data frame
     assert_that(inherits(rij, c("matrix", "simple_triplet_matrix",
                                 "data.frame")))
+    if (nrow(rij) == 0) {
+      stop("A prioritization problem must have at least one feature.")
+    }
     if (is.matrix(rij)) {
       rij <- slam::as.simple_triplet_matrix(unname(rij))
     } else if (is.data.frame(rij)) {
@@ -399,6 +405,9 @@ minsetcover_model.SpatialPolygons <- function(
     # ensure that rij is a matrix, sparse matrix, or data frame
     assert_that(inherits(rij, c("matrix", "simple_triplet_matrix",
                                 "data.frame")))
+    if (nrow(rij) == 0) {
+      stop("A prioritization problem must have at least one feature.")
+    }
     if (is.matrix(rij)) {
       rij <- slam::as.simple_triplet_matrix(unname(rij))
     } else if (is.data.frame(rij)) {

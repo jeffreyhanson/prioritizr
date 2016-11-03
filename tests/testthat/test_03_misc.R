@@ -1,4 +1,4 @@
-context('03 misc functions') 
+context('03 misc functions')
 
 test_that('gaussian_field', {
   # data
@@ -7,7 +7,7 @@ test_that('gaussian_field', {
   # create obejcts
   gf_gaussian <- gaussian_field(r, range = 20, n = 4) # gaussian raster
   gf_binary <- gaussian_field(r, range = 5, n = 1, prop = 0.5) # binary raster
-  gf_linear <-gaussian_field(r, range = 20, coef = c(0.05, 0.05)) # linear trend  
+  gf_linear <-gaussian_field(r, range = 20, coef = c(0.05, 0.05)) # linear trend
   # tests
   expect_true(all(is.finite(c(raster::as.matrix(gf_gaussian)))))
   expect_equal(raster::nlayers((gf_gaussian)), 4L)
@@ -27,11 +27,11 @@ test_that('make_grid', {
   # define function
   test_that_grid_is_valid_for_raster <- function(sp, rst, type=c('square', 'hexagonal'), label='') {
     # init
-    rst <- setValues(rst, 1) # NA values in raster should not affect grid generation
+    rst <- raster::setValues(rst, 1) # NA values in raster should not affect grid generation
     type <- match.arg(type)
     label <- paste0(type, ' grid ', label)
     n_cells <- raster::ncell(rst)
-    
+
     if (type=='square') {
     expect_equal(
       length(sp@polygons),
@@ -46,9 +46,9 @@ test_that('make_grid', {
                  info=paste0(label, ': grid has cells with incorrect area'))
     }
     expect_true(
-      raster::extent(sp)@xmin <= raster::extent(rst)@xmin & 
-      raster::extent(sp)@xmax >= raster::extent(rst)@xmax & 
-      raster::extent(sp)@ymin <= raster::extent(rst)@ymin & 
+      raster::extent(sp)@xmin <= raster::extent(rst)@xmin &
+      raster::extent(sp)@xmax >= raster::extent(rst)@xmax &
+      raster::extent(sp)@ymin <= raster::extent(rst)@ymin &
       raster::extent(sp)@ymax >= raster::extent(rst)@ymax,
       info = paste0(label, 'extent of grid is smaller than raster')
     )
@@ -64,7 +64,7 @@ test_that('make_grid', {
       ifelse(type=='square', 4, 6),
       info=paste0(label, ': grid has cells with incorrect number of vertices'))
   }
-  
+
   run_all_tests_on_raster <- function(rst, label) {
     ## init
     # compute areas and widths
@@ -76,7 +76,7 @@ test_that('make_grid', {
     # square grids
     sq_grids1 <- lapply(sq_cell_widths,
                         function(x) {do.call(make_grid, list(x=rst,
-                                                             type='square', 
+                                                             type='square',
                                                              cell_width=x))})
     sq_grids2 <- lapply(sq_cell_areas,
                         function(x) {do.call(make_grid, list(x=rst,
@@ -109,7 +109,7 @@ test_that('make_grid', {
           as.list(paste(label[c(1,1,1)], c('(original)', '(disaggregated)', '(aggregated)'))))
     # check that grids generated using corresponding cell_area and cell_width values are equal
     Map(expect_equal, sq_grids1, sq_grids2)
-    Map(expect_equal, hex_grids1, hex_grids2)  
+    Map(expect_equal, hex_grids1, hex_grids2)
   }
   ## tests
   # check for correct outputs
@@ -117,7 +117,7 @@ test_that('make_grid', {
   run_all_tests_on_raster(r2, 'missing one cell')
   run_all_tests_on_raster(r3, 'missing one row')
   run_all_tests_on_raster(r4, 'all missing')
-  
+
   # check that invalid arguments return error
   expect_error(make_grid(r1, cell_width = 0.4, type = "rhombus"))
   expect_error(make_grid(r1, cell_width = 0.4, type = NA))
