@@ -71,7 +71,9 @@ make_grid.Spatial <- function(x, type = c("hexagonal", "square"), cell_width,
   }
   # buffered extent of study area to define cells over
   if (inherits(x, "Raster") &&
-      isTRUE(all.equal(raster::res(x) %% cell_width, c(0, 0)))) {
+      (isTRUE(all.equal(raster::res(x) %% cell_width, c(0, 0))) ||
+      isTRUE(all.equal(cell_width %% raster::res(x), c(0, 0))))
+    ) {
     ext <- methods::as(raster::extent(x), "SpatialPolygons")
   } else {
     ext <- methods::as(raster::extent(x) + cell_width, "SpatialPolygons")
