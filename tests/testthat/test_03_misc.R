@@ -34,13 +34,14 @@ test_that('make_grid', {
       n_finite_cells,
       info=paste0(label, ': grid has incorrect number of grid cells'))
     expect_equal(
-      rgeos::gCentroid(sp, byid=TRUE)@coords,
-      as.matrix(raster::rasterToPoints(rst, spatial=FALSE)[,1:2]),
+      `dimnames<-`(rgeos::gCentroid(sp, byid=TRUE)@coords, NULL),
+      `dimnames<-`(as.matrix(raster::rasterToPoints(rst, spatial=FALSE)[,1:2]), NULL),
       info=paste0(label, ': grid has incorrect location of grid cell centroids'))
-    expect_equal(rgeos::gArea(sp, byid=TRUE), rep(prod(raster::res(rst)), n_finite_cells),
+    expect_equal(unname(rgeos::gArea(sp, byid=TRUE)),
+                 rep(prod(raster::res(rst)), n_finite_cells),
                  info=paste0(label, ': grid has cells with incorrect area'))
     expect_equal(
-      c(sapply(
+      unique(c(sapply(
         sp@polygons,
         function(x) {
           n.coords <- nrow(x@Polygons[[1]]@coords)-1
@@ -49,8 +50,8 @@ test_that('make_grid', {
             x@Polygons[[1]]@coords[2:n.coords,]
           )
         }
-      )),
-      ifelse(type=='square', raster::res(rst)[1], sqrt(2 * prod(raster::res(rs)) / sqrt(3))),
+      ))),
+      ifelse(type=='square', raster::res(rst)[1], sqrt(2 * prod(raster::res(rst)) / sqrt(3))),
       info=paste0(label, ': grid has cells with incorrect widths'))
     expect_equal(
       c(sapply(
@@ -60,7 +61,7 @@ test_that('make_grid', {
       rep(1, n_finite_cells),
       info=paste0(label, ': grid has polygons with more than one sub-polygon'))
     expect_equal(
-      sapply(sp@polygons, function(x) {nrow(x@Polygons[[1]]@coords)}),
+      sapply(sp@polygons, function(x) {nrow(x@Polygons[[1]]@coords)-1}),
       rep(ifelse(type=='square', 4, 6), n_finite_cells),
       info=paste0(label, ': grid has cells with incorrect number of vertices'))
   }
@@ -87,7 +88,6 @@ test_that('make_grid', {
     Map(expect_equal, sq_grids1, sq_grids2)
     Map(expect_equal, hex_grids1, hex_grids2)  
   }
-  
   ## tests
   # check for correct outputs
   run_all_tests_on_raster(r1)
@@ -101,47 +101,5 @@ test_that('make_grid', {
   expect_error(make_grid(r1, cell_width = NA, type = 'hexagonal'))
   expect_error(make_grid(r1, cell_area = Inf, type = 'square'))
   expect_error(make_grid(r1, cell_area = NA, type = 'square'))
-})
-
-test_that('calculate_boundaries', {
-  # data
-  r1 <- raster::raster(matrix(1:4, 2, 2)) # raster with finite values in all cells
-  r2 <- raster::raster(matrix(c(1:3, NA), 2, 2)) # raster with one NA value
-  r3 <- raster::raster(matrix(c(1:2, NA, NA), 2, 2)) # raster with one column of NA values
-  r4 <- raster::raster(matrix(rep(NA, 4), 2, 2)) # raster with all values as NA
-  s1_1 <- data.frame(
-    i = c(1L, 1L, 1L, 2L, 2L, 2L, 3L, 3L, 3L, 4L, 4L, 4L),
-    j = c(1L, 2L, 3L, 1L, 2L, 4L, 1L, 3L, 4L, 2L, 3L, 4L),
-    v = c(0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5))
-  s1_2 <- data.frame(
-    i = c(1L, 1L, 1L, 2L, 2L, 2L, 3L, 3L, 3L, 4L, 4L, 4L),
-    j = c(1L, 2L, 3L, 1L, 2L, 4L, 1L, 3L, 4L, 2L, 3L, 4L),
-    v = c(0.25, 0.5, 0.5, 0.5, 0.25, 0.5, 0.5, 0.25, 0.5, 0.5, 0.5, 0.25))
-  s2 <- data.frame(
-    i = c(1L,   1L,   1L,  2L,   2L,   3L,  3L),
-    j = c(1L,   2L,   3L,  1L,   2L,   1L,  3L),
-    v = c( 1,  0.5,  0.5,  0.5,  1.5,  0.5,  1.5))
-  s3 <- data.frame(
-    i = c(1L,   1L,  2L,   2L),
-    j = c(1L,   2L,  1L,   2L),
-    v = c(1.5, 0.5, 0.5,  1.5))
-  s4 <- data.frame(i = numeric(), j = numeric(), v = numeric())
-  # create objects
-  b1_1 <- calculate_boundaries(r1, edge_factor=0.5)
-  b1_2 <- calculate_boundaries(r1, edge_factor=0.25)
-  b2 <- calculate_boundaries(r2, edge_factor=1)
-  b3 <- calculate_boundaries(r3, edge_factor=1)
-  b4 <- calculate_boundaries(r4, edge_factor=1)
-  # test
-  expect_equal(data.frame(i=b1_1$i, j=b1_1$j, v=b1_1$v), s1_1)
-  expect_equal(data.frame(i=b1_2$i, j=b1_2$j, v=b1_2$v), s1_2)
-  expect_equal(data.frame(i=b2$i, j=b2$j, v=b2$v), s2)
-  expect_equal(data.frame(i=b3$i, j=b3$j, v=b3$v), s3)
-  expect_equal(data.frame(i=b4$i, j=b4$j, v=b4$v), s4)
-  expect_error(calculate_boundaries(r1, edge_factor=Inf))
-  expect_error(calculate_boundaries(r1, edge_factor=NA))
-  expect_error(calculate_boundaries(r1, edge_factor=NULL))
-  expect_error(calculate_boundaries(NA))
-  expect_error(calculate_boundaries(NULL))
 })
 
