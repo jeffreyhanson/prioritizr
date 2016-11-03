@@ -8,7 +8,7 @@ r: release devel
 
 os:
   - linux
-  - osx
+#  - osx
 
 env:
   global:
@@ -17,6 +17,7 @@ env:
 apt_packages:
   - r-cran-rgdal
   - r-cran-rsymphony
+  - r-cran-rgeos
   - libgeos-dev
   - libgeos-c1
   - curl
@@ -31,7 +32,6 @@ before_install:
   - if [ "$TRAVIS_OS_NAME" == "linux" ]; then sudo apt-get --yes --force-yes update -qq; fi;
   - if [ "$TRAVIS_OS_NAME" == "linux" ]; then sudo apt-get install -y; fi;
   - if [ "$TRAVIS_OS_NAME" == "linux" ]; then Rscript -e "install.packages('sp')"; fi;
-  - if [ "$TRAVIS_OS_NAME" == "linux" ]; then Rscript -e "install.packages('http://cran.r-project.org/src/contrib/Archive/rgeos/rgeos_0.3-20.tar.gz', repos=NULL, type='source')"; fi;
   - if [ "$TRAVIS_OS_NAME" == "osx" ]; then brew install Caskroom/cask/xquartz; fi;
   - if [ "$TRAVIS_OS_NAME" == "osx" ]; then brew install ghostscript; fi;
   - if [ "$TRAVIS_OS_NAME" == "osx" ]; then brew tap coin-or-tools/coinor; fi;
