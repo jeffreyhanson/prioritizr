@@ -207,7 +207,7 @@ minsetcover_model.numeric <- function(
                         ncol = raster::ncell(x),
                         vars = c("feature", "pu", "amount"))
   }
-  # feature representations levels must be not be missing
+  # feature representations levels must not be missing
   if (!all(is.finite(rij$v) & is.numeric(rij$v))) {
     stop("Representation matrix cannot have missing or non-numeric values.")
   }
@@ -224,7 +224,9 @@ minsetcover_model.numeric <- function(
     targets <- set_targets(slam::row_sums(rij), targets)
   } else {
     # check that all targets are attainable
-    assert_that(all(targets <= slam::row_sums(rij)))
+    if (!all(targets <= slam::row_sums(rij))) {
+      stop("Representation targets are not attainable.")
+    }
   }
 
   structure(

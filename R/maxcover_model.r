@@ -119,7 +119,7 @@ maxcover_model.numeric <- function(
               # budget isn't exceeded by locked in cells
               sum(x[locked_in], na.rm = TRUE) <= budget,
               # budget is greater than cost of cheapest cell
-              min(x, na.rm=TRUE) <= budget,
+              min(x, na.rm = TRUE) <= budget,
               !missing(rij),
               inherits(rij, c("matrix", "simple_triplet_matrix",
                               "data.frame")))
