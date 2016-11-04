@@ -190,8 +190,6 @@ maxcover_model.Raster <- function(
               is_integer(locked_out) | inherits(locked_out, "RasterLayer"),
               assertthat::is.number(budget), budget > 0,
               is.numeric(targets),
-              # budget isn't exceeded by locked in cells
-              sum(x[][locked_in], na.rm = TRUE) <= budget,
               # budget is greater than cost of cheapest cell
               raster::cellStats(x, 'min') <= budget)
 
