@@ -122,7 +122,7 @@ maxcover_model.numeric <- function(
               all(locked_out <= length(x)),
               # can't be locked in and out
               length(intersect(locked_in, locked_out)) == 0,
-              assertthat::is.number(budget), budget > 0,
+              assertthat::is.number(budget),
               # budget isn't exceeded by locked in cells
               sum(x[locked_in], na.rm = TRUE) <= budget,
               # budget is greater than cost of cheapest cell
@@ -189,7 +189,7 @@ maxcover_model.Raster <- function(
               is_integer(locked_in) | inherits(locked_in, "RasterLayer"),
               is_integer(locked_out) | inherits(locked_out, "RasterLayer"),
               assertthat::is.number(budget), budget > 0,
-              asserttthat::is.number(targets),
+              is.numeric(targets),
               # budget isn't exceeded by locked in cells
               sum(x[][locked_in], na.rm = TRUE) <= budget,
               # budget is greater than cost of cheapest cell
@@ -318,7 +318,7 @@ maxcover_model.Raster <- function(
 #' @describeIn maxcover_model SpatialPolygonsData frame of planning units with
 #'   cost attribute
 maxcover_model.SpatialPolygons <- function(
-  x, features, budget, rij,
+  x, features, targets, budget, rij,
   locked_in = integer(),
   locked_out = integer(),
   target_type = c("relative", "absolute"), ...) {
@@ -333,7 +333,7 @@ maxcover_model.SpatialPolygons <- function(
               all(locked_out <= raster::ncell(x)),
               # can't be locked in and out
               length(intersect(locked_in, locked_out)) == 0,
-              is.numeric(budget),
+              assertthat::is.number(budget),
               is.numeric(targets),
               # budget isn't exceeded by locked in cells
               sum(x$cost[locked_in], na.rm = TRUE) <= budget,

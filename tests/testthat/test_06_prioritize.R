@@ -8,11 +8,11 @@ run_maxcover_tests <- function(solver='best') {
   locked_out <- 1
   features <- raster::stack(raster::raster(matrix(c(2,1,1,0), ncol=2)), raster::raster(matrix(c(10,10,10,10), ncol=2)))
   # generate object
-  prb <- maxcover_model(x=cost, features=features, locked_in=locked_in, locked_out=locked_out, budget=budget, targets=c(2,10))
+  prb <- maxcover_model(x=cost, features=features, locked_in=locked_in, locked_out=locked_out, budget=budget, targets=c(2,10), target_type='absolute')
   # generate result
   sol <- prioritize(prb, solver=solver)
   # tests
-  expect_equal(sol$objval, 22) # correct amount held
+  expect_equal(sol$objval, 2) # correct amount held
   expect_equal(sol$x, c(0,1,1,NA)) # correct solution
 }
 
