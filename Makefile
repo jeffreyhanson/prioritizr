@@ -1,4 +1,4 @@
-all: clean install document readme vignettes site check build
+all: clean install document readme site vignettes check build
 
 clean:
 	rm -rf docs/*
@@ -18,9 +18,11 @@ readme: install
 	cd inst/vign;\
 	R -e "knitr::knit('README.Rmd')";
 	mv -f inst/vign/README.md README.md
+	mv -f inst/vign/README README
 
 vignettes: install
 	rm -rf vignettes/*
+	mkdir -p vignettes
 	cd inst/vign;\
 	R -e "knitr::knit('prioritizr-full.Rmd')";\
 	R -e "knitr::knit('prioritizr-quickstart.Rmd')"
