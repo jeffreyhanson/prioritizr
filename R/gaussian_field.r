@@ -57,9 +57,9 @@ gaussian_field <- function(r, range, n = 1, mean = 0, variance = 1, nugget = 0,
   beta <- c(mean, coef)
   psill <- variance - nugget
   # define spatial variogram model
-  gsim <- gstat::gstat(formula = (z ~ x + y), dummy = TRUE, beta = beta, nmax = 20,
-                       model = gstat::vgm(psill = psill, range = range,
-                                          nugget = nugget, model = 'Exp'))
+  gsim <- gstat::gstat(formula = (z ~ x + y), dummy = TRUE, beta = beta,
+                       nmax = 20, model = gstat::vgm(psill = psill,
+                       range = range, nugget = nugget, model = 'Exp'))
   # prevent predict from printing useless output to screen
   utils::capture.output({
     vals <- raster::rasterToPoints(r, spatial = TRUE) %>%

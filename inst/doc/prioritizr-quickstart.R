@@ -30,7 +30,8 @@ levelplot(species, main = 'Species Distributions', layout = c(2, 2),
 # genrate cost layer
 cost <- gaussian_field(r, 20, mean = 1000, variance = 500)
 cost <- setNames(cost, "cost")
-levelplot(cost, main = "Cost", margin = FALSE, col.regions = viridis::viridis(100))
+levelplot(cost, main = "Cost", margin = FALSE,
+          col.regions = viridis::viridis(100))
 
 ## ----msc_model-----------------------------------------------------------
 msc_model <- minsetcover_model(x = cost, features = species, targets = 0.2)

@@ -28,7 +28,7 @@ prioritize_symphony.minsetcover_model <- function(
   # estimate absolute gap from objective function for relaxed solution
   # convert relative to absolute gap
   if (gap == 0) {
-    gap = -1
+    gap <- -1
     t_gap <- 0
   } else {
     t_gap <- system.time({
@@ -65,7 +65,7 @@ prioritize_symphony.minsetcover_model <- function(
   }
   # solve
   t <- system.time({
-    results <- Rsymphony::Rsymphony_solve_LP(
+    results <- symphony_solve_LP(
       # objective function
       obj = pm$cost,
       # constraints
@@ -128,7 +128,7 @@ prioritize_symphony.maxcover_model <- function(
   # estimate absolute gap from objective function for relaxed solution
   # convert relative to absolute gap
   if (gap == 0) {
-    gap = -1
+    gap <- -1
     t_gap <- 0
   } else {
     t_gap <- system.time({
@@ -166,7 +166,7 @@ prioritize_symphony.maxcover_model <- function(
 
   # solve
   t <- system.time({
-    results <- Rsymphony::Rsymphony_solve_LP(
+    results <- symphony_solve_LP(
       # objective function
       obj = c(rep(0, length(pm$cost)), rep(1, length(pm$targets))),
       # constraints
