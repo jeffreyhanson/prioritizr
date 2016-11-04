@@ -1,6 +1,3 @@
----
-output: github_document
----
 [![Travis Build Status](https://img.shields.io/travis/mstrimas/prioritizr/master.svg?label=Linux)](https://travis-ci.org/mstrimas/prioritizr)
 [![AppVeyor Build Status](https://img.shields.io/appveyor/ci/mstrimas/prioritizr/master.svg?label=Windows)](https://ci.appveyor.com/project/mstrimas/prioritizr)
 [![Coverage Status](https://codecov.io/github/mstrimas/prioritizr/coverage.svg?branch=master)](https://codecov.io/github/mstrimas/prioritizr?branch=master)

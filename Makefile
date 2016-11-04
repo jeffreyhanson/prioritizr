@@ -18,7 +18,8 @@ readme: install
 	cd inst/vign;\
 	R -e "knitr::knit('README.Rmd')";
 	mv -f inst/vign/README.md README.md
-	mv -f inst/vign/README README
+	rm -rf ./README
+	mv -f inst/vign/README ./
 
 vignettes: install
 	rm -rf vignettes/*
