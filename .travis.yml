@@ -8,7 +8,7 @@ r: release devel
 
 os:
   - linux
-#  - osx
+  - osx
 
 env:
   global:
