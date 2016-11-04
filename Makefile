@@ -1,5 +1,7 @@
 all: clean install document readme site vignettes check build
 
+documentation: clean install document readme site vignettes
+
 clean:
 	rm -rf docs/*
 	rm -rf inst/doc/*

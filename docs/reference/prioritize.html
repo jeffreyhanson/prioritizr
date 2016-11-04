@@ -264,11 +264,11 @@ independently to function:</p>
 #&gt;   RHS range        [2e+02, 1e+03]
 #&gt; Found heuristic solution: objective 1.81733e+06
 #&gt; Presolve removed 0 rows and 506 columns
-#&gt; Presolve time: 0.07s
+#&gt; Presolve time: 0.09s
 #&gt; Presolved: 9 rows, 9494 columns, 25500 nonzeros
 #&gt; Variable types: 0 continuous, 9494 integer (9494 binary)
 #&gt; 
-#&gt; Root relaxation: objective 1.095607e+06, 45 iterations, 0.02 seconds
+#&gt; Root relaxation: objective 1.095607e+06, 45 iterations, 0.04 seconds
 #&gt; 
 #&gt;     Nodes    |    Current Node    |     Objective Bounds      |     Work
 #&gt;  Expl Unexpl |  Obj  Depth IntInf | Incumbent    BestBd   Gap | It/Node Time
@@ -276,7 +276,7 @@ independently to function:</p>
 #&gt;      0     0 1095606.74    0    8 1817330.63 1095606.74  39.7%     -    0s
 #&gt; H    0     0                    1096349.7912 1095606.74  0.07%     -    0s
 #&gt; 
-#&gt; Explored 0 nodes (45 simplex iterations) in 0.18 seconds
+#&gt; Explored 0 nodes (45 simplex iterations) in 0.23 seconds
 #&gt; Thread count was 2 (of 2 available processors)
 #&gt; 
 #&gt; Solution count 2: 1.09635e+06 1.81733e+06 
@@ -303,11 +303,11 @@ independently to function:</p>
 #&gt;   RHS range        [2e+06, 2e+06]
 #&gt; Found heuristic solution: objective -0
 #&gt; Presolve removed 0 rows and 506 columns
-#&gt; Presolve time: 0.06s
+#&gt; Presolve time: 0.08s
 #&gt; Presolved: 10 rows, 9503 columns, 35003 nonzeros
 #&gt; Variable types: 0 continuous, 9503 integer (9503 binary)
 #&gt; 
-#&gt; Root relaxation: objective 7.906133e+00, 59 iterations, 0.03 seconds
+#&gt; Root relaxation: objective 7.906133e+00, 59 iterations, 0.04 seconds
 #&gt; 
 #&gt;     Nodes    |    Current Node    |     Objective Bounds      |     Work
 #&gt;  Expl Unexpl |  Obj  Depth IntInf | Incumbent    BestBd   Gap | It/Node Time
@@ -316,19 +316,20 @@ independently to function:</p>
 #&gt; H    0     0                       5.0000000    7.90613  58.1%     -    0s
 #&gt;      0     0    7.80505    0   10    5.00000    7.80505  56.1%     -    0s
 #&gt;      0     0    7.77352    0   12    5.00000    7.77352  55.5%     -    0s
-#&gt;      0     0    7.64891    0   13    5.00000    7.64891  53.0%     -    0s
+#&gt;      0     0    7.64891    0   13    5.00000    7.64891  53.0%     -    1s
 #&gt;      0     0    7.63365    0   16    5.00000    7.63365  52.7%     -    1s
 #&gt;      0     0    7.61577    0   20    5.00000    7.61577  52.3%     -    1s
 #&gt;      0     0    7.61574    0   22    5.00000    7.61574  52.3%     -    2s
-#&gt;      0     0    7.60305    0   21    5.00000    7.60305  52.1%     -    2s
-#&gt;      0     2    7.60305    0   21    5.00000    7.60305  52.1%     -    6s
-#&gt; H   28     9                       6.0000000    6.07761  1.29%  17.6    6s
+#&gt;      0     0    7.60305    0   21    5.00000    7.60305  52.1%     -    3s
+#&gt;      0     2    7.60305    0   21    5.00000    7.60305  52.1%     -    9s
+#&gt;      5     5    6.65552    2   10    5.00000    6.65552  33.1%  41.2   10s
+#&gt; H   28     9                       6.0000000    6.07761  1.29%  17.6   10s
 #&gt; 
 #&gt; Cutting planes:
 #&gt;   Cover: 1
 #&gt;   MIR: 11
 #&gt; 
-#&gt; Explored 34 nodes (980 simplex iterations) in 6.79 seconds
+#&gt; Explored 34 nodes (980 simplex iterations) in 10.63 seconds
 #&gt; Thread count was 2 (of 2 available processors)
 #&gt; 
 #&gt; Solution count 3: 6 5 -0 
