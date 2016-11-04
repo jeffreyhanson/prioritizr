@@ -37,7 +37,7 @@ vignettes: install
 	touch inst/doc/prioritizr-quickstart.*
 	touch inst/doc/prioritizr-full.*
 
-site: document readme vignettes
+site: document readme
 	R -e "devtools::load_all()"
 	R -e "devtools::document()"
 	cp -f inst/vign/prioritizr-full.Rmd vignettes/prioritizr-full.Rmd
