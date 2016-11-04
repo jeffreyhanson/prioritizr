@@ -2,7 +2,7 @@ Package: prioritizr
 Type: Package
 Title: Systematic Conservation Prioritization in R
 Version: 0.1.2
-Authors@R: "Matthew Strimas-Mackey <mstrimas@gmail.com> [aut,cre]"
+Authors@R: person("Matthew", "Strimas-Mackey", email="mstrimas@gmail.com", role = c("aut", "cre"))
 Description: Solve Marxan-like systematic reserve design problems using integer
     programming techniques.
 Depends:
@@ -34,3 +34,4 @@ Suggests:
 URL: https://github.com/mstrimas/prioritizr
 BugReports: https://github.com/mstrimas/prioritizr/issues
 VignetteBuilder: knitr
+Maintainer: Matthew Strimas-Mackey <mstrimas@gmail.com>
