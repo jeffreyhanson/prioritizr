@@ -1,5 +1,5 @@
 ---
-title: "Conservation Prioritization with Integer Programming in R"
+title: "Getting Started with `prioritizr`"
 author: "Matt Strimas-Mackey"
 date: "`r Sys.Date()`"
 output:
@@ -17,7 +17,7 @@ vignette: >
 knitr::opts_chunk$set(
   collapse = TRUE,
   comment = "#>",
-  fig.path = "figures/full_",
+  fig.path = "figures/quickstart_",
   fig.align = "center"
 )
 ```
@@ -36,6 +36,8 @@ SYMPHONY: `Rsymphony` (on CRAN) and `lpsymphony` (on Bioconductor). On Windows a
 - The GNU Linear Programming Kit ([GLPK](https://www.gnu.org/software/glpk/)) is an open-source package for solving linear and integer linear programs. The R package
 glpkAPI provides an interface to the low-level GLPK API.
 
+This vignette is a simple, quickstart guide, for full details on this package, consult the complete vignette with `vignette("prioritizr")`. What follows are some simple example of how this package can be used to solve conservation prioritization problems.
+
 ```{r packages, message=FALSE}
 library(prioritizr)
 # for plotting
@@ -43,7 +45,7 @@ library(rasterVis)
 library(viridis)
 ```
 
-## Data generation
+# Data generation
 
 The function `gaussian_field()` can be used to generate spatially auto-correlated random fields, to be used as semi-realistic spatial variables. All conservation prioritization problems involve balancing a trade-off between representing features of conservation interest and minimizing the cost of protection. Therefore we start by generating distributions for four species and a cost layer, all on a 100x100 raster grid of planning units.
 
@@ -69,7 +71,7 @@ levelplot(cost, main = "Cost", margin = FALSE,
           col.regions = viridis::viridis(100))
 ```
 
-## Minimum set cover problem
+# Minimum set cover problem
 
 In the context of systematic reserve design, the minimum set cover problem seeks to find the set of planning units that minimizes the overall cost of a reserve network, while meeting a set of representation targets for the conservation features. The cost is often either the area of the planning units or the opportunity cost of foregone commercial activities (e.g. logging or agriculture). The representation targets ensure that each species is adequately represented in the reserve network.
 
@@ -81,7 +83,7 @@ msc_model <- minsetcover_model(x = cost, features = species, targets = 0.2)
 class(msc_model)
 ```
 
-## Maximum coverage problem
+# Maximum coverage problem
 
 The maximum coverage problem seeks to find the set of planning units that maximizes the overall level of representation across a suite of conservation features, while keeping cost within a fixed budget. The cost is often either the area of the planning units or the opportunity cost of foregone commercial activities (e.g. from logging or agriculture). Representation level is typically given by the occupancy within each planning unit, however, some measure of abundance or probability of occurrence may also be used.
 
@@ -89,11 +91,11 @@ This problem is roughly the opposite of what the conservation planning software 
 
 ```{r mc_model}
 b_25 <- 0.25 * raster::cellStats(cost, "sum")
-mc_model <- maxcover_model(x = cost, features = species, budget = b_25)
+mc_model <- maxcover_model(x = cost, features = species, budget = b_25, targets = 0.2)
 class(mc_model)
 ```
 
-## Solving prioritization problems
+# Solving prioritization problems
 
 The function `prioritize()` offers a unified interface to solving either type of prioritization problem using any of the available solvers. To solve the minimum set cover problem to within 0.1% of optimality use:
 
