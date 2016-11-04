@@ -76,7 +76,7 @@
 #' # lock in cells 6-10
 #' r_locked_in[6:10] <- 1
 #' model_raste_lock <- maxcover_model(x = cost, features = f, budget = b_25,
-#'                                    locked_in = r_locked_in,
+#'                                    locked_in = r_locked_in, targets=0.5,
 #'                                    locked_out = 16:20)
 #'
 #' # if some cells are to be excluded, e.g. those outside study area, set

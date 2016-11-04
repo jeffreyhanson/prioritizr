@@ -183,7 +183,8 @@ plot_selection(cost, msc_results_symphony$x)
 # prepare maximum coverage prioritization model
 # set budget to 25\% of total cost
 b_25 <- 0.25 * raster::cellStats(cost, "sum")
-mc_model <- maxcover_model(x = cost, features = f, budget = b_25)
+mc_model <- maxcover_model(x = cost, features = f, budget = b_25,
+                           targets = 0.5)
 # solve to within 1 percent of optimality
 # pick solver automatically (uses Gurobi if installed)
 mc_results <- prioritize(mc_model, gap = 0.001)
