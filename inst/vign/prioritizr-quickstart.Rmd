@@ -8,7 +8,7 @@ output:
     toc_depth: 2
     theme: united
 vignette: >
-  %\VignetteIndexEntry{Vignette Title}
+  %\VignetteIndexEntry{"prioritizr: Quickstart Guide"}
   %\VignetteEngine{knitr::rmarkdown}
   %\VignetteEncoding{UTF-8}
 ---
@@ -36,7 +36,7 @@ SYMPHONY: `Rsymphony` (on CRAN) and `lpsymphony` (on Bioconductor). On Windows a
 - The GNU Linear Programming Kit ([GLPK](https://www.gnu.org/software/glpk/)) is an open-source package for solving linear and integer linear programs. The R package
 glpkAPI provides an interface to the low-level GLPK API.
 
-This vignette is a simple, quickstart guide, for full details on this package, consult the complete vignette with `vignette("prioritizr")`. What follows are some simple example of how this package can be used to solve conservation prioritization problems.
+This vignette is a simple, quickstart guide, for full details on this package, consult the complete vignette with `vignette("prioritizr-full")`. What follows are some simple example of how this package can be used to solve conservation prioritization problems.
 
 ```{r packages, message=FALSE}
 library(prioritizr)
@@ -76,7 +76,7 @@ levelplot(cost, main = "Cost", margin = FALSE,
 In the context of systematic reserve design, the minimum set cover problem seeks to find the set of planning units that minimizes the overall cost of a reserve network, while meeting a set of representation targets for the conservation features. The cost is often either the area of the planning units or the opportunity cost of foregone commercial activities (e.g. logging or agriculture). The representation targets ensure that each species is adequately represented in the reserve network.
 
 This problem is equivalent to a simplified Marxan reserve design problem,
-with the Boundary Length Modifier (BLM) set to zero. To specify a prioritization model of this type we use the `minsetcover_model()` function to create a `minsetcover_model` S3 object. This function takes data in a variety of formats (raster, vector, or tabular) and generates a standard object encapsulating the prioritization problem. Here we set targets for all species to protect 20% of their existing range.
+with the Boundary Length Modifier (BLM) set to zero. To specify a prioritization model of this type we use the `minsetcover_model()` function to create a `minsetcover_model` S3 object. This function takes data in a variety of formats (raster, vector, or tabular) and generates a standard object encapsulating the prioritization problem. Here I set targets such that 20% of each species' existing range will be protected.
 
 ```{r msc_model}
 msc_model <- minsetcover_model(x = cost, features = species, targets = 0.2)
@@ -85,14 +85,27 @@ class(msc_model)
 
 # Maximum coverage problem
 
-The maximum coverage problem seeks to find the set of planning units that maximizes the overall level of representation across a suite of conservation features, while keeping cost within a fixed budget. The cost is often either the area of the planning units or the opportunity cost of foregone commercial activities (e.g. from logging or agriculture). Representation level is typically given by the occupancy within each planning unit, however, some measure of abundance or probability of occurrence may also be used.
+The maximum coverage problem seeks to find the set of planning units that maximizes the overall level of representation across a suite of conservation features, while keeping cost within a fixed budget. The cost is often either the area of the planning units or the opportunity cost of foregone commercial activities (e.g. from logging or agriculture). Representation within each planning unit is typically given by the occupancy of each species, however, some measure of abundance or probability of occurrence may also be used.
 
-This problem is roughly the opposite of what the conservation planning software Marxan does. To specify a prioritization model of this type we use the `maxcover_model()` function to create a `maxcover_model` S3 object. This function takes data in a variety of formats (raster, vector, or tabular) and generates a standard object encapsulating the prioritization problem. Here we set the budget to 25% of the total cost of the study area.
+This problem is roughly the opposite of what the conservation planning software Marxan does. To specify a prioritization model of this type we use the `maxcover_model()` function to create a `maxcover_model` S3 object. This function takes data in a variety of formats (raster, vector, or tabular) and generates a standard object encapsulating the prioritization problem. Here we set the budget to 25% of the total cost of the study area .
 
 ```{r mc_model}
 b_25 <- 0.25 * raster::cellStats(cost, "sum")
-mc_model <- maxcover_model(x = cost, features = species, budget = b_25, targets = 0.2)
+mc_model <- maxcover_model(x = cost, features = species, budget = b_25)
 class(mc_model)
+```
+
+# Maximum target coverage problem
+
+The maximum target coverage problem is a modified version of the the maximum coverage problem. Each conservation feature is assigned a representation target and the objective is to find the set of planning units that meets the most targets while remaining within a fixed budget. 
+
+This problem is meant to be a hybrid between the maximum coverage problem and a Marxan-like minimum set cover problem in that it allows for both a budget and targets to be set. To specify a prioritization model of this type we use the `maxtargets_model()` function to create a `maxtargets_model` S3 object. This function takes data in a variety of formats (raster, vector, or tabular) and generates a standard object encapsulating the prioritization problem. Here we set the budget to 10% of the total cost of the study area and choose targets such that 20% of each species' existing range will be protected.
+
+```{r mtc_model}
+b_10 <- 0.1 * raster::cellStats(cost, "sum")
+mtc_model <- maxtargets_model(x = cost, features = species, targets = 0.2, 
+                           budget = b_25)
+class(mtc_model)
 ```
 
 # Solving prioritization problems
@@ -103,23 +116,33 @@ The function `prioritize()` offers a unified interface to solving either type of
 msc_results <- prioritize(msc_model, gap = 0.001)
 ```
 
-By default, this function uses the best available solver, which is Gurobi if it is installed. Alternatively, the solver can be specified explicitly. For example, we solve the maximum coverage problem with SYMPHONY:
+By default, this function uses the best available solver, which is Gurobi if it is installed. Alternatively, the solver can be specified explicitly. For example, to solve the maximum coverage problem with SYMPHONY use:
 
 ```{r mc_solve, results="hide"}
 mc_results <- prioritize(mc_model, solver = "symphony", gap = 0.001)
+```
+
+And to solve the maximum target coverage problem with GLPK use:
+
+```{r mtc_solve, results="hide"}
+mtc_results <- prioritize(mtc_model, solver = "glpk", gap = 0.001)
 ```
 
 The resulting solution can be displayed with `plot_selection()`:
 
 ```{r solutions}
 plot_selection(cost, msc_results$x, title = "Minimum Set Cover Solution")
-plot_selection(cost, mc_results$x, title = "Maximum Cover Solution")
+plot_selection(cost, mc_results$x, title = "Maximum Coverage Solution")
+plot_selection(cost, mtc_results$x, title = "Maximum Target Coverage Solution")
 ```
 
-The objective function values for these solutions can be access with:
+Finally, the objective function values for these solutions can be access with:
 
 ```{r objectives}
 # minimum set cover objective
 msc_results$objval
-# maximum cover objective
+# maximum coverage objective
 mc_results$objval
+# maximum target coverage objective
+mtc_results$objval
+```

@@ -8,7 +8,7 @@ output:
     toc_depth: 2
     theme: united
 vignette: >
-  %\VignetteIndexEntry{Vignette Title}
+  %\VignetteIndexEntry{"Conservation Prioritization with prioritizr"}
   %\VignetteEngine{knitr::rmarkdown}
   %\VignetteEncoding{UTF-8}
 ---

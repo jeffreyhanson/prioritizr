@@ -214,6 +214,10 @@ minsetcover_model.numeric <- function(
   if (!all(is.finite(rij$v) & is.numeric(rij$v))) {
     stop("Representation matrix cannot have missing or non-numeric values.")
   }
+  # feature must be present somewhere
+  if (!all(slam::row_sums(rij) > 0)) {
+    stop("All features must be represented in at least one planning unit.")
+  }
 
   # representation targets
   target_type <- match.arg(target_type)
@@ -328,6 +332,10 @@ minsetcover_model.Raster <- function(
   if (!all(is.finite(rij$v) & is.numeric(rij$v))) {
     stop("Representation matrix cannot have missing or non-numeric values.")
   }
+  # feature must be present somewhere
+  if (!all(slam::row_sums(rij) > 0)) {
+    stop("All features must be represented in at least one planning unit.")
+  }
 
   # representation targets
   target_type <- match.arg(target_type)
@@ -422,6 +430,10 @@ minsetcover_model.SpatialPolygons <- function(
   if (!all(is.finite(rij$v) & is.numeric(rij$v))) {
     stop("Representation matrix cannot have missing or non-numeric values.")
   }
+  # feature must be present somewhere
+  if (!all(slam::row_sums(rij) > 0)) {
+    stop("All features must be represented in at least one planning unit.")
+  }
 
   # representation targets
   target_type <- match.arg(target_type)
@@ -479,6 +491,10 @@ minsetcover_model.MarxanData <- function(x, ...) {
                       nrow = nrow(features),
                       ncol = length(cost),
                       vars = c("feature", "pu", "amount"))
+  # feature must be present somewhere
+  if (!all(slam::row_sums(rij) > 0)) {
+    stop("All features must be represented in at least one planning unit.")
+  }
 
   # targets may be relative, convert to absolute
   target <- features$target

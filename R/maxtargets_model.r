@@ -1,32 +1,37 @@
-#' Prepare a maximum coverage prioritization problem
+#' Prepare a maximum target coverage prioritization problem
 #'
-#' Specify a maximum coverage systematic conservation prioritization problem
-#' from input data in a variety of formats. These are constructor functions for
-#' \code{maxcover_model} objects which encapsulate prioritization problems in
-#' a standardized format.
+#' Specify a maximum target coverage systematic conservation prioritization
+#' problem from input data in a variety of formats. These are constructor
+#' functions for \code{maxtargets_model} objects which encapsulate
+#' prioritization problems in a standardized format.
 #'
-#' @details In the context of systematic reserve design, the maximum coverage
-#'   problem seeks to find the set of planning units that maximizes the overall
-#'   level of representation across a suite of conservation features, while
-#'   keeping cost within a fixed budget. The cost is often either the area of
+#' @details The maximum target coverage problem is a modified version of the
+#'   the maximum coverage problem (see \code{\link{maxcover_model}}). Each
+#'   conservation feature is assigned a representation target and the objective
+#'   is to find the set of planning units that meets most targets
+#'   while remaining within a fixed budget. The cost is often either the area of
 #'   the planning units or the opportunity cost of foregone commericial
 #'   activities (e.g. from logging or agriculture). Representation level is
 #'   typically given by the occupancy within each planning unit, however, some
-#'   measure of abundance or probability of occurence may also be used.
+#'   measure of abundance or probability of occurence may also be used. The
+#'   representation targets ensure that each species is adequately represented
+#'   in the reserve network.
 #'
-#'   This problem is roughly the opposite of what the conservation planning
-#'   software Marxan does.
+#'   This problem meant to be a hybrid between the maximum coverage problem and
+#'   a Marxan-like minimum set cover problem in that it allows for both a budget
+#'   and targets to be set.
 #'
 #' @param budget numeric; budget for reserve.
 #' @inheritParams minsetcover_model
 #'
-#' @return A \code{maxcover_model} object describing the prioritization
+#' @return A \code{maxtargets_model} object describing the prioritization
 #'   problem to be solved. This is an S3 object consisting of a list with the
 #'   following components:
 #'
 #' \itemize{
 #'   \item \code{cost}: numeric vector of planning unit costs
 #'   \item \code{rij}: representation matrix
+#'   \item \code{targets}: absolute feature targets
 #'   \item \code{budget}: budget for reserve
 #'   \item \code{locked_in}: indices of locked in planning units
 #'   \item \code{locked_out}: indices of locked out planning units
@@ -38,8 +43,8 @@
 #'
 #' @export
 #' @seealso \code{\link{minsetcover_model}} for the minimum set cover problem.
-#'   \code{\link{maxtargets_model}} for a modified version of the maximum
-#'   coverage problem that maximizes attainment of representation targets.
+#'   \code{\link{maxcover_model}} for the traditional maximum coverage
+#'   problem.
 #' @examples
 #' # 5x5 raster template
 #' e <- raster::extent(0, 1, 0, 1)
@@ -56,57 +61,63 @@
 #' cost <- setNames(cost, "cost")
 #'
 #' # prepare prioritization model with budget at 25% of total cost
+#' # and targets as 50% of the features' distributions
 #' b_25 <- 0.25 * raster::cellStats(cost, "sum")
-#' model <- maxcover_model(x = cost, features = f, budget = b_25)
+#' model <- maxtargets_model(x = cost, features = f, budget = b_25,
+#'                           targets = 0.5)
 #'
 #' # the representation matrix (rij) can be supplied explicitly,
 #' # in which case the features argument is no longer required
 #' rep_mat <- unname(t(f[]))
-#' model <- maxcover_model(x = cost, rij = rep_mat, budget = b_25)
+#' model <- maxtargets_model(x = cost, rij = rep_mat, budget = b_25,
+#'                           targets = 0.5)
 #'
 #' # cells can be locked in or out of the final solution
-#' model <- maxcover_model(x = cost, features = f, budget = b_25,
-#'                         locked_in = 6:10,
-#'                         locked_out = 16:20)
+#' model <- maxtargets_model(x = cost, features = f, budget = b_25,
+#'                           targets = 0.5, locked_in = 6:10,
+#'                           locked_out = 16:20)
 #' # alternatively, binary rasters can be supplied indicating locked in/out
 #' r_locked_in <- raster::raster(r)
 #' r_locked_in[] <- 0
 #' # lock in cells 6-10
 #' r_locked_in[6:10] <- 1
-#' model_raste_lock <- maxcover_model(x = cost, features = f, budget = b_25,
-#'                                    locked_in = r_locked_in,
-#'                                    locked_out = 16:20)
+#' model_raste_lock <- maxtargets_model(x = cost, features = f, budget = b_25,
+#'                                      locked_in = r_locked_in, targets=0.5,
+#'                                      locked_out = 16:20)
 #'
-#' # if some cells are to be exlcuded, e.g. those outside study area, set
+#' # if some cells are to be excluded, e.g. those outside study area, set
 #' # the cost to NA for these cells.
 #' cost_na <- cost
 #' cost_na[6:10] <- NA
-#' model_na <- maxcover_model(x = cost_na, features = f, budget = b_25)
+#' model_na <- maxtargets_model(x = cost_na, features = f, budget = b_25,
+#'                              targets = 0.5)
 #' # the model object now contains an included component specifying which
 #' # cells are to be included
 #' model_na$included
 #' which(!model_na$included)
 #' # note that the representation matrix now has fewer columns because
-#' # the decision variables corresponding to exlcuded cells have been removed
-#' model$rij
-#' model_na$rij
+#' # the decision variables corresponding to excluded cells have been removed
+#' dim(model$rij)
+#' dim(model_na$rij)
 #'
 #' # planning units can also be supplied as a SpatialPolygonsDataFrame object
 #' # with cost stored as an attribute (x$cost). Typically the function takes
 #' # longer to execute with polygons because summarizing features over planning
 #' # units is less efficient.
 #' cost_spdf <- raster::rasterToPolygons(cost)
-#' model_spdf <- maxcover_model(x = cost_spdf, features = f, budget = b_25)
-maxcover_model <- function(x, ...)  {
-  UseMethod("maxcover_model")
+#' model_spdf <- maxtargets_model(x = cost_spdf, features = f, budget = b_25,
+#'                                targets = 0.5)
+maxtargets_model <- function(x, ...)  {
+  UseMethod("maxtargets_model")
 }
 
 #' @export
-#' @describeIn maxcover_model Numeric vector of costs
-maxcover_model.numeric <- function(
-  x, budget, rij,
+#' @describeIn maxtargets_model Numeric vector of costs
+maxtargets_model.numeric <- function(
+  x, targets, budget, rij,
   locked_in = integer(),
-  locked_out = integer(), ...) {
+  locked_out = integer(),
+  target_type = c("relative", "absolute"), ...) {
   # assertions on arguments
   assert_that(all(is.finite(x)),
               is_integer(locked_in),
@@ -117,12 +128,13 @@ maxcover_model.numeric <- function(
               all(locked_out <= length(x)),
               # can't be locked in and out
               length(intersect(locked_in, locked_out)) == 0,
-              assertthat::is.number(budget), budget > 0,
+              assertthat::is.number(budget),
               # budget isn't exceeded by locked in cells
               sum(x[locked_in], na.rm = TRUE) <= budget,
               # budget is greater than cost of cheapest cell
               min(x, na.rm = TRUE) <= budget,
               !missing(rij),
+              is.numeric(targets),
               inherits(rij, c("matrix", "simple_triplet_matrix",
                               "data.frame")))
   # representation matrix rij
@@ -145,31 +157,49 @@ maxcover_model.numeric <- function(
     stop("All features must be represented in at least one planning unit.")
   }
 
+  # representation targets
+  target_type <- match.arg(target_type)
+  assert_that(length(targets) == rij$nrow || length(targets) == 1)
+  if (length(targets) == 1) {
+    targets <- rep(targets, rij$nrow)
+  }
+  # set proportional targets or check absolute targets
+  if (target_type == "relative") {
+    # convert relative targets to absolute targets
+    targets <- set_targets(slam::row_sums(rij), targets)
+  } else {
+    # check that all targets are attainable
+    assert_that(all(targets <= slam::row_sums(rij)))
+  }
+
   structure(
     list(
       cost = x,
       rij = rij,
+      targets = targets,
       budget = budget,
       locked_in = sort(as.integer(locked_in)),
       locked_out = sort(as.integer(locked_out)),
       included = TRUE
     ),
-    class = c("maxcover_model", "prioritizr_model")
+    class = c("maxtargets_model", "prioritizr_model")
   )
 }
 
 #' @export
-#' @describeIn maxcover_model RasterLayer of planning units and corresponding
+#' @describeIn maxtargets_model RasterLayer of planning units and corresponding
 #'   costs
-maxcover_model.Raster <- function(
-  x, features, budget, rij,
+maxtargets_model.Raster <- function(
+  x, features, targets, budget, rij,
   locked_in = integer(),
-  locked_out = integer(), ...) {
+  locked_out = integer(),
+  target_type = c("relative", "absolute"), ...) {
   # assertions on arguments
   assert_that(raster::nlayers(x) == 1,
               is_integer(locked_in) | inherits(locked_in, "RasterLayer"),
               is_integer(locked_out) | inherits(locked_out, "RasterLayer"),
               assertthat::is.number(budget), budget > 0,
+              is.numeric(targets),
               # budget is greater than cost of cheapest cell
               raster::cellStats(x, 'min') <= budget)
 
@@ -249,6 +279,21 @@ maxcover_model.Raster <- function(
     stop("All features must be represented in at least one planning unit.")
   }
 
+  # representation targets
+  target_type <- match.arg(target_type)
+  assert_that(length(targets) == rij$nrow || length(targets) == 1)
+  if (length(targets) == 1) {
+    targets <- rep(targets, rij$nrow)
+  }
+  # set proportional targets or check absolute targets
+  if (target_type == "relative") {
+    # convert relative targets to absolute targets
+    targets <- set_targets(slam::row_sums(rij), targets)
+  } else {
+    # check that all targets are attainable
+    assert_that(all(targets <= slam::row_sums(rij)))
+  }
+
   # shift locked cells if some planning units are excluded
   if (!isTRUE(included)) {
     # locked in
@@ -271,22 +316,24 @@ maxcover_model.Raster <- function(
     list(
       cost = cost,
       rij = rij,
+      targets = targets,
       budget = budget,
       locked_in = sort(as.integer(locked_in)),
       locked_out = sort(as.integer(locked_out)),
       included = included
     ),
-    class = c("maxcover_model", "prioritizr_model")
+    class = c("maxtargets_model", "prioritizr_model")
   )
 }
 
 #' @export
-#' @describeIn maxcover_model SpatialPolygonsData frame of planning units with
+#' @describeIn maxtargets_model SpatialPolygonsData frame of planning units with
 #'   cost attribute
-maxcover_model.SpatialPolygons <- function(
-  x, features, budget, rij,
+maxtargets_model.SpatialPolygons <- function(
+  x, features, targets, budget, rij,
   locked_in = integer(),
-  locked_out = integer(), ...) {
+  locked_out = integer(),
+  target_type = c("relative", "absolute"), ...) {
   # assertions on arguments
   assert_that("cost" %in% names(x),
               is.numeric(x$cost), all(is.finite(x$cost)),
@@ -298,7 +345,8 @@ maxcover_model.SpatialPolygons <- function(
               all(locked_out <= raster::ncell(x)),
               # can't be locked in and out
               length(intersect(locked_in, locked_out)) == 0,
-              is.numeric(budget),
+              assertthat::is.number(budget),
+              is.numeric(targets),
               # budget isn't exceeded by locked in cells
               sum(x$cost[locked_in], na.rm = TRUE) <= budget,
               # budget is greater than cost of cheapest cell
@@ -335,15 +383,31 @@ maxcover_model.SpatialPolygons <- function(
     stop("All features must be represented in at least one planning unit.")
   }
 
+  # representation targets
+  target_type <- match.arg(target_type)
+  assert_that(length(targets) == rij$nrow || length(targets) == 1)
+  if (length(targets) == 1) {
+    targets <- rep(targets, rij$nrow)
+  }
+  # set proportional targets or check absolute targets
+  if (target_type == "relative") {
+    # convert relative targets to absolute targets
+    targets <- set_targets(slam::row_sums(rij), targets)
+  } else {
+    # check that all targets are attainable
+    assert_that(all(targets <= slam::row_sums(rij)))
+  }
+
   structure(
     list(
       cost = x$cost,
       rij = rij,
+      targets = targets,
       budget = budget,
       locked_in = as.integer(locked_in),
       locked_out = as.integer(locked_out),
       included = TRUE
     ),
-    class = c("maxcover_model", "prioritizr_model")
+    class = c("maxtargets_model", "prioritizr_model")
   )
 }

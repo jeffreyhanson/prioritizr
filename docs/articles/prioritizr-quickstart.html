@@ -41,7 +41,7 @@
       <h1>Getting Started with <code>prioritizr</code></h1>
                         <h4 class="author">Matt Strimas-Mackey</h4>
             
-            <h4 class="date">2016-11-05</h4>
+            <h4 class="date">2016-11-06</h4>
           </div>
 
     
@@ -55,16 +55,16 @@
 <ul><li><a href="http://gurobi.com">Gurobi</a> is a state-of-the-art commercial optimization software with an R package interface. It is by far the fastest of the solvers available in this package, however, it is also the only one that isn&rsquo;t free. That said, free academic licenses are available.</li>
 <li><a href="https://projects.coin-or.org/SYMPHONY">SYMPHONY</a> is an open-source integer programming solver that is part of the Computational Infrastructure for Operations Research (COIN-OR) project, an initiative to promote development of open-source tools for operations research (a field that includes linear programming). Two R packages exist to provide interfaces to SYMPHONY: <code>Rsymphony</code> (on CRAN) and <code>lpsymphony</code> (on Bioconductor). On Windows and Mac,  may be easier to install.</li>
 <li>The GNU Linear Programming Kit (<a href="https://www.gnu.org/software/glpk/">GLPK</a>) is an open-source package for solving linear and integer linear programs. The R package glpkAPI provides an interface to the low-level GLPK API.</li>
-</ul><p>This vignette is a simple, quickstart guide, for full details on this package, consult the complete vignette with <code><a href="../articles/prioritizr.html">vignette("prioritizr")</a></code>. What follows are some simple example of how this package can be used to solve conservation prioritization problems.</p>
-<pre class="sourceCode r"><code class="sourceCode r"><span class="kw">library</span>(prioritizr)
+</ul><p>This vignette is a simple, quickstart guide, for full details on this package, consult the complete vignette with <code><a href="../articles/prioritizr-full.html">vignette("prioritizr-full")</a></code>. What follows are some simple example of how this package can be used to solve conservation prioritization problems.</p>
+<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r"><span class="kw">library</span>(prioritizr)
 <span class="co"># for plotting</span>
 <span class="kw">library</span>(rasterVis)
-<span class="kw">library</span>(viridis)</code></pre>
+<span class="kw">library</span>(viridis)</code></pre></div>
 </div>
 <div id="data-generation" class="section level1">
 <h1 class="hasAnchor"><html><body><a href="#data-generation" class="anchor"> </a></body></html>Data generation</h1>
 <p>The function <code><a href="../reference/gaussian_field.html">gaussian_field()</a></code> can be used to generate spatially auto-correlated random fields, to be used as semi-realistic spatial variables. All conservation prioritization problems involve balancing a trade-off between representing features of conservation interest and minimizing the cost of protection. Therefore we start by generating distributions for four species and a cost layer, all on a 100x100 raster grid of planning units.</p>
-<pre class="sourceCode r"><code class="sourceCode r"><span class="kw">set.seed</span>(<span class="dv">1</span>)
+<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r"><span class="kw">set.seed</span>(<span class="dv">1</span>)
 <span class="co"># raster 100x100 template</span>
 e &lt;-<span class="st"> </span>raster::<span class="kw">extent</span>(<span class="dv">0</span>, <span class="dv">100</span>, <span class="dv">0</span>, <span class="dv">100</span>)
 r &lt;-<span class="st"> </span>raster::<span class="kw">raster</span>(e, <span class="dt">nrows =</span> <span class="dv">100</span>, <span class="dt">ncols =</span> <span class="dv">100</span>, <span class="dt">vals =</span> <span class="dv">1</span>)
@@ -77,50 +77,67 @@ species &lt;-<span class="st"> </span>raster::<span class="kw">stack</span>(spec
 species &lt;-<span class="st"> </span><span class="kw">setNames</span>(species, letters[<span class="dv">1</span>:raster::<span class="kw">nlayers</span>(species)])
 <span class="kw">levelplot</span>(species, <span class="dt">main =</span> <span class="st">'Species Distributions'</span>, <span class="dt">layout =</span> <span class="kw">c</span>(<span class="dv">2</span>, <span class="dv">2</span>),
           <span class="dt">scales =</span> <span class="kw">list</span>(<span class="dt">draw =</span> <span class="ot">FALSE</span>),
-          <span class="dt">col.regions =</span> <span class="kw">c</span>(<span class="st">"grey20"</span>, <span class="st">"#fd9900"</span>), <span class="dt">colorkey =</span> <span class="ot">FALSE</span>)</code></pre>
+          <span class="dt">col.regions =</span> <span class="kw">c</span>(<span class="st">"grey20"</span>, <span class="st">"#fd9900"</span>), <span class="dt">colorkey =</span> <span class="ot">FALSE</span>)</code></pre></div>
 <p><img src="figures/quickstart_generate-data-1.png" width="672" style="display: block; margin: auto;"></p>
-<pre class="sourceCode r"><code class="sourceCode r"><span class="co"># genrate cost layer</span>
+<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r"><span class="co"># genrate cost layer</span>
 cost &lt;-<span class="st"> </span><span class="kw"><a href="../reference/gaussian_field.html">gaussian_field</a></span>(r, <span class="dv">20</span>, <span class="dt">mean =</span> <span class="dv">1000</span>, <span class="dt">variance =</span> <span class="dv">500</span>)
 cost &lt;-<span class="st"> </span><span class="kw">setNames</span>(cost, <span class="st">"cost"</span>)
 <span class="kw">levelplot</span>(cost, <span class="dt">main =</span> <span class="st">"Cost"</span>, <span class="dt">margin =</span> <span class="ot">FALSE</span>,
-          <span class="dt">col.regions =</span> viridis::<span class="kw">viridis</span>(<span class="dv">100</span>))</code></pre>
+          <span class="dt">col.regions =</span> viridis::<span class="kw">viridis</span>(<span class="dv">100</span>))</code></pre></div>
 <p><img src="figures/quickstart_generate-data-2.png" width="672" style="display: block; margin: auto;"></p>
 </div>
 <div id="minimum-set-cover-problem" class="section level1">
 <h1 class="hasAnchor"><html><body><a href="#minimum-set-cover-problem" class="anchor"> </a></body></html>Minimum set cover problem</h1>
 <p>In the context of systematic reserve design, the minimum set cover problem seeks to find the set of planning units that minimizes the overall cost of a reserve network, while meeting a set of representation targets for the conservation features. The cost is often either the area of the planning units or the opportunity cost of foregone commercial activities (e.g.&nbsp;logging or agriculture). The representation targets ensure that each species is adequately represented in the reserve network.</p>
-<p>This problem is equivalent to a simplified Marxan reserve design problem, with the Boundary Length Modifier (BLM) set to zero. To specify a prioritization model of this type we use the <code><a href="../reference/minsetcover_model.html">minsetcover_model()</a></code> function to create a <code>minsetcover_model</code> S3 object. This function takes data in a variety of formats (raster, vector, or tabular) and generates a standard object encapsulating the prioritization problem. Here we set targets for all species to protect 20% of their existing range.</p>
-<pre class="sourceCode r"><code class="sourceCode r">msc_model &lt;-<span class="st"> </span><span class="kw"><a href="../reference/minsetcover_model.html">minsetcover_model</a></span>(<span class="dt">x =</span> cost, <span class="dt">features =</span> species, <span class="dt">targets =</span> <span class="fl">0.2</span>)
+<p>This problem is equivalent to a simplified Marxan reserve design problem, with the Boundary Length Modifier (BLM) set to zero. To specify a prioritization model of this type we use the <code><a href="../reference/minsetcover_model.html">minsetcover_model()</a></code> function to create a <code>minsetcover_model</code> S3 object. This function takes data in a variety of formats (raster, vector, or tabular) and generates a standard object encapsulating the prioritization problem. Here I set targets such that 20% of each species&rsquo; existing range will be protected.</p>
+<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r">msc_model &lt;-<span class="st"> </span><span class="kw"><a href="../reference/minsetcover_model.html">minsetcover_model</a></span>(<span class="dt">x =</span> cost, <span class="dt">features =</span> species, <span class="dt">targets =</span> <span class="fl">0.2</span>)
 <span class="kw">class</span>(msc_model)
-<span class="co">#&gt; [1] "minsetcover_model" "prioritizr_model"</span></code></pre>
+<span class="co">#&gt; [1] "minsetcover_model" "prioritizr_model"</span></code></pre></div>
 </div>
 <div id="maximum-coverage-problem" class="section level1">
 <h1 class="hasAnchor"><html><body><a href="#maximum-coverage-problem" class="anchor"> </a></body></html>Maximum coverage problem</h1>
-<p>The maximum coverage problem seeks to find the set of planning units that maximizes the overall level of representation across a suite of conservation features, while keeping cost within a fixed budget. The cost is often either the area of the planning units or the opportunity cost of foregone commercial activities (e.g.&nbsp;from logging or agriculture). Representation level is typically given by the occupancy within each planning unit, however, some measure of abundance or probability of occurrence may also be used.</p>
-<p>This problem is roughly the opposite of what the conservation planning software Marxan does. To specify a prioritization model of this type we use the <code><a href="../reference/maxcover_model.html">maxcover_model()</a></code> function to create a <code>maxcover_model</code> S3 object. This function takes data in a variety of formats (raster, vector, or tabular) and generates a standard object encapsulating the prioritization problem. Here we set the budget to 25% of the total cost of the study area.</p>
-<pre class="sourceCode r"><code class="sourceCode r">b_25 &lt;-<span class="st"> </span><span class="fl">0.25</span> *<span class="st"> </span>raster::<span class="kw">cellStats</span>(cost, <span class="st">"sum"</span>)
-mc_model &lt;-<span class="st"> </span><span class="kw"><a href="../reference/maxcover_model.html">maxcover_model</a></span>(<span class="dt">x =</span> cost, <span class="dt">features =</span> species, <span class="dt">budget =</span> b_25, <span class="dt">targets =</span> <span class="fl">0.2</span>)
+<p>The maximum coverage problem seeks to find the set of planning units that maximizes the overall level of representation across a suite of conservation features, while keeping cost within a fixed budget. The cost is often either the area of the planning units or the opportunity cost of foregone commercial activities (e.g.&nbsp;from logging or agriculture). Representation within each planning unit is typically given by the occupancy of each species, however, some measure of abundance or probability of occurrence may also be used.</p>
+<p>This problem is roughly the opposite of what the conservation planning software Marxan does. To specify a prioritization model of this type we use the <code><a href="../reference/maxcover_model.html">maxcover_model()</a></code> function to create a <code>maxcover_model</code> S3 object. This function takes data in a variety of formats (raster, vector, or tabular) and generates a standard object encapsulating the prioritization problem. Here we set the budget to 25% of the total cost of the study area .</p>
+<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r">b_25 &lt;-<span class="st"> </span><span class="fl">0.25</span> *<span class="st"> </span>raster::<span class="kw">cellStats</span>(cost, <span class="st">"sum"</span>)
+mc_model &lt;-<span class="st"> </span><span class="kw"><a href="../reference/maxcover_model.html">maxcover_model</a></span>(<span class="dt">x =</span> cost, <span class="dt">features =</span> species, <span class="dt">budget =</span> b_25)
 <span class="kw">class</span>(mc_model)
-<span class="co">#&gt; [1] "maxcover_model"   "prioritizr_model"</span></code></pre>
+<span class="co">#&gt; [1] "maxcover_model"   "prioritizr_model"</span></code></pre></div>
+</div>
+<div id="maximum-target-coverage-problem" class="section level1">
+<h1 class="hasAnchor"><html><body><a href="#maximum-target-coverage-problem" class="anchor"> </a></body></html>Maximum target coverage problem</h1>
+<p>The maximum target coverage problem is a modified version of the the maximum coverage problem. Each conservation feature is assigned a representation target and the objective is to find the set of planning units that meets the most targets while remaining within a fixed budget.</p>
+<p>This problem is meant to be a hybrid between the maximum coverage problem and a Marxan-like minimum set cover problem in that it allows for both a budget and targets to be set. To specify a prioritization model of this type we use the <code><a href="../reference/maxtargets_model.html">maxtargets_model()</a></code> function to create a <code>maxtargets_model</code> S3 object. This function takes data in a variety of formats (raster, vector, or tabular) and generates a standard object encapsulating the prioritization problem. Here we set the budget to 10% of the total cost of the study area and choose targets such that 20% of each species&rsquo; existing range will be protected.</p>
+<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r">b_10 &lt;-<span class="st"> </span><span class="fl">0.1</span> *<span class="st"> </span>raster::<span class="kw">cellStats</span>(cost, <span class="st">"sum"</span>)
+mtc_model &lt;-<span class="st"> </span><span class="kw"><a href="../reference/maxtargets_model.html">maxtargets_model</a></span>(<span class="dt">x =</span> cost, <span class="dt">features =</span> species, <span class="dt">targets =</span> <span class="fl">0.2</span>, 
+                           <span class="dt">budget =</span> b_25)
+<span class="kw">class</span>(mtc_model)
+<span class="co">#&gt; [1] "maxtargets_model" "prioritizr_model"</span></code></pre></div>
 </div>
 <div id="solving-prioritization-problems" class="section level1">
 <h1 class="hasAnchor"><html><body><a href="#solving-prioritization-problems" class="anchor"> </a></body></html>Solving prioritization problems</h1>
 <p>The function <code><a href="../reference/prioritize.html">prioritize()</a></code> offers a unified interface to solving either type of prioritization problem using any of the available solvers. To solve the minimum set cover problem to within 0.1% of optimality use:</p>
-<pre class="sourceCode r"><code class="sourceCode r">msc_results &lt;-<span class="st"> </span><span class="kw"><a href="../reference/prioritize.html">prioritize</a></span>(msc_model, <span class="dt">gap =</span> <span class="fl">0.001</span>)</code></pre>
-<p>By default, this function uses the best available solver, which is Gurobi if it is installed. Alternatively, the solver can be specified explicitly. For example, we solve the maximum coverage problem with SYMPHONY:</p>
-<pre class="sourceCode r"><code class="sourceCode r">mc_results &lt;-<span class="st"> </span><span class="kw"><a href="../reference/prioritize.html">prioritize</a></span>(mc_model, <span class="dt">solver =</span> <span class="st">"symphony"</span>, <span class="dt">gap =</span> <span class="fl">0.001</span>)</code></pre>
+<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r">msc_results &lt;-<span class="st"> </span><span class="kw"><a href="../reference/prioritize.html">prioritize</a></span>(msc_model, <span class="dt">gap =</span> <span class="fl">0.001</span>)</code></pre></div>
+<p>By default, this function uses the best available solver, which is Gurobi if it is installed. Alternatively, the solver can be specified explicitly. For example, to solve the maximum coverage problem with SYMPHONY use:</p>
+<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r">mc_results &lt;-<span class="st"> </span><span class="kw"><a href="../reference/prioritize.html">prioritize</a></span>(mc_model, <span class="dt">solver =</span> <span class="st">"symphony"</span>, <span class="dt">gap =</span> <span class="fl">0.001</span>)</code></pre></div>
+<p>And to solve the maximum target coverage problem with GLPK use:</p>
+<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r">mtc_results &lt;-<span class="st"> </span><span class="kw"><a href="../reference/prioritize.html">prioritize</a></span>(mtc_model, <span class="dt">solver =</span> <span class="st">"glpk"</span>, <span class="dt">gap =</span> <span class="fl">0.001</span>)</code></pre></div>
 <p>The resulting solution can be displayed with <code><a href="../reference/plot_selection.html">plot_selection()</a></code>:</p>
-<pre class="sourceCode r"><code class="sourceCode r"><span class="kw"><a href="../reference/plot_selection.html">plot_selection</a></span>(cost, msc_results$x, <span class="dt">title =</span> <span class="st">"Minimum Set Cover Solution"</span>)</code></pre>
+<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r"><span class="kw"><a href="../reference/plot_selection.html">plot_selection</a></span>(cost, msc_results$x, <span class="dt">title =</span> <span class="st">"Minimum Set Cover Solution"</span>)</code></pre></div>
 <p><img src="figures/quickstart_solutions-1.png" width="672" style="display: block; margin: auto;"></p>
-<pre class="sourceCode r"><code class="sourceCode r"><span class="kw"><a href="../reference/plot_selection.html">plot_selection</a></span>(cost, mc_results$x, <span class="dt">title =</span> <span class="st">"Maximum Cover Solution"</span>)</code></pre>
+<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r"><span class="kw"><a href="../reference/plot_selection.html">plot_selection</a></span>(cost, mc_results$x, <span class="dt">title =</span> <span class="st">"Maximum Coverage Solution"</span>)</code></pre></div>
 <p><img src="figures/quickstart_solutions-2.png" width="672" style="display: block; margin: auto;"></p>
-<p>The objective function values for these solutions can be access with:</p>
-<pre class="sourceCode r"><code class="sourceCode r"><span class="co"># minimum set cover objective</span>
+<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r"><span class="kw"><a href="../reference/plot_selection.html">plot_selection</a></span>(cost, mtc_results$x, <span class="dt">title =</span> <span class="st">"Maximum Target Coverage Solution"</span>)</code></pre></div>
+<p><img src="figures/quickstart_solutions-3.png" width="672" style="display: block; margin: auto;"></p>
+<p>Finally, the objective function values for these solutions can be access with:</p>
+<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r"><span class="co"># minimum set cover objective</span>
 msc_results$objval
 <span class="co">#&gt; [1] 985393.9</span>
-<span class="co"># maximum cover objective</span>
+<span class="co"># maximum coverage objective</span>
 mc_results$objval
-<span class="co">#&gt; [1] 4</span></code></pre>
+<span class="co">#&gt; [1] 5667</span>
+<span class="co"># maximum target coverage objective</span>
+mtc_results$objval
+<span class="co">#&gt; [1] 4</span></code></pre></div>
 </div>
 </div>
   </div>
@@ -132,6 +149,7 @@ mc_results$objval
       <li><a href="#data-generation">Data generation</a></li>
       <li><a href="#minimum-set-cover-problem">Minimum set cover problem</a></li>
       <li><a href="#maximum-coverage-problem">Maximum coverage problem</a></li>
+      <li><a href="#maximum-target-coverage-problem">Maximum target coverage problem</a></li>
       <li><a href="#solving-prioritization-problems">Solving prioritization problems</a></li>
       </ul></div>
       </div>

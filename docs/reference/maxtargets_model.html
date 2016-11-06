@@ -6,7 +6,7 @@
 <meta http-equiv="X-UA-Compatible" content="IE=edge">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-<title>Prepare a maximum coverage prioritization problem — maxcover_model • prioritizr</title>
+<title>Prepare a maximum target coverage prioritization problem — maxtargets_model • prioritizr</title>
 
 <!-- jquery -->
 <script src="https://code.jquery.com/jquery-3.1.0.min.js" integrity="sha384-nrOSfDHtoPMzJHjVTdCopGqIqeYETSXhZDFyniQ8ZHcVy08QesyHcnOUpMpqnmWq" crossorigin="anonymous"></script>
@@ -77,29 +77,32 @@
       <div class="row">
   <div class="col-md-9 contents">
     <div class="page-header">
-    <h1>Prepare a maximum coverage prioritization problem</h1>
+    <h1>Prepare a maximum target coverage prioritization problem</h1>
     </div>
 
     
-    <p>Specify a maximum coverage systematic conservation prioritization problem
-from input data in a variety of formats. These are constructor functions for
-<code>maxcover_model</code> objects which encapsulate prioritization problems in
-a standardized format.</p>
+    <p>Specify a maximum target coverage systematic conservation prioritization
+problem from input data in a variety of formats. These are constructor
+functions for <code>maxtargets_model</code> objects which encapsulate
+prioritization problems in a standardized format.</p>
     
 
-    <pre><span class='fu'>maxcover_model</span>(<span class='no'>x</span>, <span class='no'>...</span>)
+    <pre><span class='fu'>maxtargets_model</span>(<span class='no'>x</span>, <span class='no'>...</span>)
 
 <span class='co'># S3 method for numeric</span>
-<span class='fu'>maxcover_model</span>(<span class='no'>x</span>, <span class='no'>budget</span>, <span class='no'>rij</span>, <span class='kw'>locked_in</span> <span class='kw'>=</span> <span class='fu'>integer</span>(),
-  <span class='kw'>locked_out</span> <span class='kw'>=</span> <span class='fu'>integer</span>(), <span class='no'>...</span>)
+<span class='fu'>maxtargets_model</span>(<span class='no'>x</span>, <span class='no'>targets</span>, <span class='no'>budget</span>, <span class='no'>rij</span>,
+  <span class='kw'>locked_in</span> <span class='kw'>=</span> <span class='fu'>integer</span>(), <span class='kw'>locked_out</span> <span class='kw'>=</span> <span class='fu'>integer</span>(),
+  <span class='kw'>target_type</span> <span class='kw'>=</span> <span class='fu'>c</span>(<span class='st'>"relative"</span>, <span class='st'>"absolute"</span>), <span class='no'>...</span>)
 
 <span class='co'># S3 method for Raster</span>
-<span class='fu'>maxcover_model</span>(<span class='no'>x</span>, <span class='no'>features</span>, <span class='no'>budget</span>, <span class='no'>rij</span>,
-  <span class='kw'>locked_in</span> <span class='kw'>=</span> <span class='fu'>integer</span>(), <span class='kw'>locked_out</span> <span class='kw'>=</span> <span class='fu'>integer</span>(), <span class='no'>...</span>)
+<span class='fu'>maxtargets_model</span>(<span class='no'>x</span>, <span class='no'>features</span>, <span class='no'>targets</span>, <span class='no'>budget</span>, <span class='no'>rij</span>,
+  <span class='kw'>locked_in</span> <span class='kw'>=</span> <span class='fu'>integer</span>(), <span class='kw'>locked_out</span> <span class='kw'>=</span> <span class='fu'>integer</span>(),
+  <span class='kw'>target_type</span> <span class='kw'>=</span> <span class='fu'>c</span>(<span class='st'>"relative"</span>, <span class='st'>"absolute"</span>), <span class='no'>...</span>)
 
 <span class='co'># S3 method for SpatialPolygons</span>
-<span class='fu'>maxcover_model</span>(<span class='no'>x</span>, <span class='no'>features</span>, <span class='no'>budget</span>, <span class='no'>rij</span>,
-  <span class='kw'>locked_in</span> <span class='kw'>=</span> <span class='fu'>integer</span>(), <span class='kw'>locked_out</span> <span class='kw'>=</span> <span class='fu'>integer</span>(), <span class='no'>...</span>)</pre>
+<span class='fu'>maxtargets_model</span>(<span class='no'>x</span>, <span class='no'>features</span>, <span class='no'>targets</span>, <span class='no'>budget</span>, <span class='no'>rij</span>,
+  <span class='kw'>locked_in</span> <span class='kw'>=</span> <span class='fu'>integer</span>(), <span class='kw'>locked_out</span> <span class='kw'>=</span> <span class='fu'>integer</span>(),
+  <span class='kw'>target_type</span> <span class='kw'>=</span> <span class='fu'>c</span>(<span class='st'>"relative"</span>, <span class='st'>"absolute"</span>), <span class='no'>...</span>)</pre>
     
     <h2 class="hasAnchor" id="arguments"><a class="anchor" href="#arguments"></a> Arguments</h2>
     <dl class="dl-horizontal">
@@ -131,6 +134,12 @@ a standardized format.</p>
  arguments are ignored if x is a <code>MarxanData</code> object.</dd>
       <dt>...</dt>
       <dd>additional arguments passed on to methods</dd>
+      <dt>targets</dt>
+      <dd>numeric; representation targets either as proportion (between
+0 and 1) of total representation level when <code>target_type = &quot;relative&quot;</code>
+(the default), or absolute targets when <code>target_type = &quot;absolute&quot;</code>.
+The order of the targets should match the ordering in the <code>features</code>
+argument.</dd>
       <dt>budget</dt>
       <dd>numeric; budget for reserve.</dd>
       <dt>rij</dt>
@@ -158,6 +167,10 @@ are already heavily developed and therefore have little viable habitat.
 Alternatively, if <code>x</code> is a <code>RasterLayer</code>, then <code>locked_out</code>
 can be a binary <code>RasterLayer</code> with 1s identifying the planning units
 to lock out.</dd>
+      <dt>target_type</dt>
+      <dd>&quot;relative&quot; or &quot;absolute&quot;; specifies whether the
+<code>target</code> argument should be interpreted as relative to the total level
+of representation or as an absolute target</dd>
       <dt>features</dt>
       <dd>RasterStack object; the distribution of conservation
 features. Missing values (i.e. <code>NA</code>s) can be used to indicate the
@@ -171,13 +184,15 @@ polygons using <code><a href='summarize_features.html'>summarize_features</a></c
     
     <h2 class="hasAnchor" id="value"><a class="anchor" href="#value"></a>Value</h2>
 
-    <p>A <code>maxcover_model</code> object describing the prioritization
+    <p>A <code>maxtargets_model</code> object describing the prioritization
   problem to be solved. This is an S3 object consisting of a list with the
   following components:</p>
     <p><ul>
 <li> <code>cost</code>: numeric vector of planning unit costs
   </li>
 <li> <code>rij</code>: representation matrix
+  </li>
+<li> <code>targets</code>: absolute feature targets
   </li>
 <li> <code>budget</code>: budget for reserve
   </li>
@@ -194,16 +209,20 @@ polygons using <code><a href='summarize_features.html'>summarize_features</a></c
     
     <h2 class="hasAnchor" id="details"><a class="anchor" href="#details"></a>Details</h2>
 
-    <p>In the context of systematic reserve design, the maximum coverage
-  problem seeks to find the set of planning units that maximizes the overall
-  level of representation across a suite of conservation features, while
-  keeping cost within a fixed budget. The cost is often either the area of
+    <p>The maximum target coverage problem is a modified version of the
+  the maximum coverage problem (see <code><a href='maxcover_model.html'>maxcover_model</a></code>). Each
+  conservation feature is assigned a representation target and the objective
+  is to find the set of planning units that meets most targets
+  while remaining within a fixed budget. The cost is often either the area of
   the planning units or the opportunity cost of foregone commericial
   activities (e.g. from logging or agriculture). Representation level is
   typically given by the occupancy within each planning unit, however, some
-  measure of abundance or probability of occurence may also be used.</p>
-    <p>This problem is roughly the opposite of what the conservation planning
-  software Marxan does.</p>
+  measure of abundance or probability of occurence may also be used. The
+  representation targets ensure that each species is adequately represented
+  in the reserve network.</p>
+    <p>This problem meant to be a hybrid between the maximum coverage problem and
+  a Marxan-like minimum set cover problem in that it allows for both a budget
+  and targets to be set.</p>
     
     <h2 class="hasAnchor" id="methods-by-class-"><a class="anchor" href="#methods-by-class-"></a>Methods (by class)</h2>
 
@@ -221,8 +240,8 @@ cost attribute
     <h2 class="hasAnchor" id="see-also"><a class="anchor" href="#see-also"></a>See also</h2>
 
     <p><code><a href='minsetcover_model.html'>minsetcover_model</a></code> for the minimum set cover problem.
-  <code><a href='maxtargets_model.html'>maxtargets_model</a></code> for a modified version of the maximum
-  coverage problem that maximizes attainment of representation targets.</p>
+  <code><a href='maxcover_model.html'>maxcover_model</a></code> for the traditional maximum coverage
+  problem.</p>
     
 
     <h2 class="hasAnchor" id="examples"><a class="anchor" href="#examples"></a>Examples</h2>
@@ -241,45 +260,50 @@ cost attribute
 <span class='no'>cost</span> <span class='kw'>&lt;-</span> <span class='fu'>setNames</span>(<span class='no'>cost</span>, <span class='st'>"cost"</span>)
 
 <span class='co'># prepare prioritization model with budget at 25% of total cost</span>
+<span class='co'># and targets as 50% of the features' distributions</span>
 <span class='no'>b_25</span> <span class='kw'>&lt;-</span> <span class='fl'>0.25</span> * <span class='kw'>raster</span><span class='kw'>::</span><span class='fu'>cellStats</span>(<span class='no'>cost</span>, <span class='st'>"sum"</span>)
-<span class='no'>model</span> <span class='kw'>&lt;-</span> <span class='fu'>maxcover_model</span>(<span class='kw'>x</span> <span class='kw'>=</span> <span class='no'>cost</span>, <span class='kw'>features</span> <span class='kw'>=</span> <span class='no'>f</span>, <span class='kw'>budget</span> <span class='kw'>=</span> <span class='no'>b_25</span>)
+<span class='no'>model</span> <span class='kw'>&lt;-</span> <span class='fu'>maxtargets_model</span>(<span class='kw'>x</span> <span class='kw'>=</span> <span class='no'>cost</span>, <span class='kw'>features</span> <span class='kw'>=</span> <span class='no'>f</span>, <span class='kw'>budget</span> <span class='kw'>=</span> <span class='no'>b_25</span>,
+                          <span class='kw'>targets</span> <span class='kw'>=</span> <span class='fl'>0.5</span>)
 
 <span class='co'># the representation matrix (rij) can be supplied explicitly,</span>
 <span class='co'># in which case the features argument is no longer required</span>
 <span class='no'>rep_mat</span> <span class='kw'>&lt;-</span> <span class='fu'>unname</span>(<span class='fu'>t</span>(<span class='no'>f</span>[]))
-<span class='no'>model</span> <span class='kw'>&lt;-</span> <span class='fu'>maxcover_model</span>(<span class='kw'>x</span> <span class='kw'>=</span> <span class='no'>cost</span>, <span class='kw'>rij</span> <span class='kw'>=</span> <span class='no'>rep_mat</span>, <span class='kw'>budget</span> <span class='kw'>=</span> <span class='no'>b_25</span>)
+<span class='no'>model</span> <span class='kw'>&lt;-</span> <span class='fu'>maxtargets_model</span>(<span class='kw'>x</span> <span class='kw'>=</span> <span class='no'>cost</span>, <span class='kw'>rij</span> <span class='kw'>=</span> <span class='no'>rep_mat</span>, <span class='kw'>budget</span> <span class='kw'>=</span> <span class='no'>b_25</span>,
+                          <span class='kw'>targets</span> <span class='kw'>=</span> <span class='fl'>0.5</span>)
 
 <span class='co'># cells can be locked in or out of the final solution</span>
-<span class='no'>model</span> <span class='kw'>&lt;-</span> <span class='fu'>maxcover_model</span>(<span class='kw'>x</span> <span class='kw'>=</span> <span class='no'>cost</span>, <span class='kw'>features</span> <span class='kw'>=</span> <span class='no'>f</span>, <span class='kw'>budget</span> <span class='kw'>=</span> <span class='no'>b_25</span>,
-                        <span class='kw'>locked_in</span> <span class='kw'>=</span> <span class='fl'>6</span>:<span class='fl'>10</span>,
-                        <span class='kw'>locked_out</span> <span class='kw'>=</span> <span class='fl'>16</span>:<span class='fl'>20</span>)
+<span class='no'>model</span> <span class='kw'>&lt;-</span> <span class='fu'>maxtargets_model</span>(<span class='kw'>x</span> <span class='kw'>=</span> <span class='no'>cost</span>, <span class='kw'>features</span> <span class='kw'>=</span> <span class='no'>f</span>, <span class='kw'>budget</span> <span class='kw'>=</span> <span class='no'>b_25</span>,
+                          <span class='kw'>targets</span> <span class='kw'>=</span> <span class='fl'>0.5</span>, <span class='kw'>locked_in</span> <span class='kw'>=</span> <span class='fl'>6</span>:<span class='fl'>10</span>,
+                          <span class='kw'>locked_out</span> <span class='kw'>=</span> <span class='fl'>16</span>:<span class='fl'>20</span>)
 <span class='co'># alternatively, binary rasters can be supplied indicating locked in/out</span>
 <span class='no'>r_locked_in</span> <span class='kw'>&lt;-</span> <span class='kw'>raster</span><span class='kw'>::</span><span class='fu'>raster</span>(<span class='no'>r</span>)
 <span class='no'>r_locked_in</span>[] <span class='kw'>&lt;-</span> <span class='fl'>0</span>
 <span class='co'># lock in cells 6-10</span>
 <span class='no'>r_locked_in</span>[<span class='fl'>6</span>:<span class='fl'>10</span>] <span class='kw'>&lt;-</span> <span class='fl'>1</span>
-<span class='no'>model_raste_lock</span> <span class='kw'>&lt;-</span> <span class='fu'>maxcover_model</span>(<span class='kw'>x</span> <span class='kw'>=</span> <span class='no'>cost</span>, <span class='kw'>features</span> <span class='kw'>=</span> <span class='no'>f</span>, <span class='kw'>budget</span> <span class='kw'>=</span> <span class='no'>b_25</span>,
-                                   <span class='kw'>locked_in</span> <span class='kw'>=</span> <span class='no'>r_locked_in</span>,
-                                   <span class='kw'>locked_out</span> <span class='kw'>=</span> <span class='fl'>16</span>:<span class='fl'>20</span>)
+<span class='no'>model_raste_lock</span> <span class='kw'>&lt;-</span> <span class='fu'>maxtargets_model</span>(<span class='kw'>x</span> <span class='kw'>=</span> <span class='no'>cost</span>, <span class='kw'>features</span> <span class='kw'>=</span> <span class='no'>f</span>, <span class='kw'>budget</span> <span class='kw'>=</span> <span class='no'>b_25</span>,
+                                     <span class='kw'>locked_in</span> <span class='kw'>=</span> <span class='no'>r_locked_in</span>, <span class='kw'>targets</span><span class='kw'>=</span><span class='fl'>0.5</span>,
+                                     <span class='kw'>locked_out</span> <span class='kw'>=</span> <span class='fl'>16</span>:<span class='fl'>20</span>)
 
-<span class='co'># if some cells are to be exlcuded, e.g. those outside study area, set</span>
+<span class='co'># if some cells are to be excluded, e.g. those outside study area, set</span>
 <span class='co'># the cost to NA for these cells.</span>
 <span class='no'>cost_na</span> <span class='kw'>&lt;-</span> <span class='no'>cost</span>
 <span class='no'>cost_na</span>[<span class='fl'>6</span>:<span class='fl'>10</span>] <span class='kw'>&lt;-</span> <span class='fl'>NA</span>
-<span class='no'>model_na</span> <span class='kw'>&lt;-</span> <span class='fu'>maxcover_model</span>(<span class='kw'>x</span> <span class='kw'>=</span> <span class='no'>cost_na</span>, <span class='kw'>features</span> <span class='kw'>=</span> <span class='no'>f</span>, <span class='kw'>budget</span> <span class='kw'>=</span> <span class='no'>b_25</span>)
+<span class='no'>model_na</span> <span class='kw'>&lt;-</span> <span class='fu'>maxtargets_model</span>(<span class='kw'>x</span> <span class='kw'>=</span> <span class='no'>cost_na</span>, <span class='kw'>features</span> <span class='kw'>=</span> <span class='no'>f</span>, <span class='kw'>budget</span> <span class='kw'>=</span> <span class='no'>b_25</span>,
+                             <span class='kw'>targets</span> <span class='kw'>=</span> <span class='fl'>0.5</span>)
 <span class='co'># the model object now contains an included component specifying which</span>
 <span class='co'># cells are to be included</span>
 <span class='no'>model_na</span>$<span class='no'>included</span></div><div class='output co'>#&gt;  [1]  TRUE  TRUE  TRUE  TRUE  TRUE FALSE FALSE FALSE FALSE FALSE  TRUE  TRUE
 #&gt; [13]  TRUE  TRUE  TRUE  TRUE  TRUE  TRUE  TRUE  TRUE  TRUE  TRUE  TRUE  TRUE
 #&gt; [25]  TRUE</div><div class='input'><span class='fu'>which</span>(!<span class='no'>model_na</span>$<span class='no'>included</span>)</div><div class='output co'>#&gt; [1]  6  7  8  9 10</div><div class='input'><span class='co'># note that the representation matrix now has fewer columns because</span>
-<span class='co'># the decision variables corresponding to exlcuded cells have been removed</span>
-<span class='no'>model</span>$<span class='no'>rij</span></div><div class='output co'>#&gt; A 4x25 simple triplet matrix.</div><div class='input'><span class='no'>model_na</span>$<span class='no'>rij</span></div><div class='output co'>#&gt; A 4x20 simple triplet matrix.</div><div class='input'>
+<span class='co'># the decision variables corresponding to excluded cells have been removed</span>
+<span class='fu'>dim</span>(<span class='no'>model</span>$<span class='no'>rij</span>)</div><div class='output co'>#&gt; [1]  4 25</div><div class='input'><span class='fu'>dim</span>(<span class='no'>model_na</span>$<span class='no'>rij</span>)</div><div class='output co'>#&gt; [1]  4 20</div><div class='input'>
 <span class='co'># planning units can also be supplied as a SpatialPolygonsDataFrame object</span>
 <span class='co'># with cost stored as an attribute (x$cost). Typically the function takes</span>
 <span class='co'># longer to execute with polygons because summarizing features over planning</span>
 <span class='co'># units is less efficient.</span>
 <span class='no'>cost_spdf</span> <span class='kw'>&lt;-</span> <span class='kw'>raster</span><span class='kw'>::</span><span class='fu'>rasterToPolygons</span>(<span class='no'>cost</span>)
-<span class='no'>model_spdf</span> <span class='kw'>&lt;-</span> <span class='fu'>maxcover_model</span>(<span class='kw'>x</span> <span class='kw'>=</span> <span class='no'>cost_spdf</span>, <span class='kw'>features</span> <span class='kw'>=</span> <span class='no'>f</span>, <span class='kw'>budget</span> <span class='kw'>=</span> <span class='no'>b_25</span>)</div></pre>
+<span class='no'>model_spdf</span> <span class='kw'>&lt;-</span> <span class='fu'>maxtargets_model</span>(<span class='kw'>x</span> <span class='kw'>=</span> <span class='no'>cost_spdf</span>, <span class='kw'>features</span> <span class='kw'>=</span> <span class='no'>f</span>, <span class='kw'>budget</span> <span class='kw'>=</span> <span class='no'>b_25</span>,
+                               <span class='kw'>targets</span> <span class='kw'>=</span> <span class='fl'>0.5</span>)</div></pre>
   </div>
   <div class="col-md-3 hidden-xs hidden-sm" id="sidebar">
     <h2>Contents</h2>

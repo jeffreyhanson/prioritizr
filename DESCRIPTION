@@ -20,8 +20,7 @@ Imports:
     rgeos,
     rasterVis,
     methods,
-    tidyr,
-    viridis
+    tidyr
 Suggests:
     marxan,
     gurobi,

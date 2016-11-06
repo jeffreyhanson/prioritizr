@@ -1,5 +1,5 @@
-context('02 utils functions') 
- 
+context('02 utils functions')
+
 test_that('df_to_matrix', {
   # data
   df <- data.frame(i = c(1, 1, 3), j = c(1, 3, 3), v = c(10, 20, 30))
@@ -14,7 +14,8 @@ test_that('df_to_matrix', {
   # tests
   expect_equal(as.matrix(df_to_matrix(df)), mtx)
   expect_equal(as.matrix(df_to_matrix(df, sparse = FALSE)), mtx)
-  expect_equal(as.matrix(df_to_matrix(df, sparse = FALSE, add_lower = TRUE)), mtx2)
+  expect_equal(as.matrix(df_to_matrix(df, sparse = FALSE, add_lower = TRUE)),
+               mtx2)
   expect_error(df_to_matrix(df[,1]))
   expect_error(df_to_matrix(df[,-1:-3]))
   expect_error(df_to_matrix(df3))
