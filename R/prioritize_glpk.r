@@ -131,32 +131,43 @@ prioritize_glpk.maxcover_model <- function(
 
   # construct model
   n_pu <- length(pm$cost)
+  n_dv <- length(pm$cost)+length(pm$targets)
+  A <- rbind(
+    cbind(pm$rij, slam::simple_triplet_diag_matrix(v=-pm$targets)),
+    slam::simple_triplet_matrix(i=rep(1, length(pm$cost)),j=seq_along(pm$cost), v=pm$cost,
+                                nrow=1, ncol=length(pm$cost)+length(pm$targets))
+  )
+  
   model <- glpkAPI::initProbGLPK()
   glpkAPI::setProbNameGLPK(model, "maxcover")
   # goal is to maximize objective function
   glpkAPI::setObjDirGLPK(model, glpkAPI::GLP_MAX)
   # initialize decision variables
-  glpkAPI::addColsGLPK(model, ncols = n_pu)
+  glpkAPI::addColsGLPK(model, ncols = n_dv)
   # objective function
   # also specify no bounds on decision variables
-  glpkAPI::setColsBndsObjCoefsGLPK(model, j = seq.int(n_pu),
+  glpkAPI::setColsBndsObjCoefsGLPK(model, j = seq.int(n_dv),
                                    lb = NULL, ub = NULL,
-                                   obj_coef = slam::col_sums(pm$rij),
-                                   type = rep(glpkAPI::GLP_FR, n_pu))
+                                   obj_coef = c(rep(0, length(pm$cost)), rep(1, length(pm$targets))),
+                                   type = rep(glpkAPI::GLP_BV, n_dv))
   # binary decision variables
-  glpkAPI::setColsKindGLPK(model, j = seq.int(n_pu),
-                           kind = rep(glpkAPI::GLP_BV, n_pu))
+  glpkAPI::setColsKindGLPK(model, j = seq.int(n_dv),
+                           kind = rep(glpkAPI::GLP_BV, n_dv))
   # constraints
   # initialize
-  glpkAPI::addRowsGLPK(model, nrows = 1)
+  glpkAPI::addRowsGLPK(model, nrows = nrow(A))
   # set non-zero elements of constraint matrix
-  glpkAPI::loadMatrixGLPK(model, ne = n_pu,
-                          ia = rep(1, n_pu), ja = seq.int(n_pu),
-                          ra = pm$cost)
+  glpkAPI::loadMatrixGLPK(model, ne = length(A$i),
+                          ia = A$i, ja = A$j,
+                          ra = A$v)
   # rhs
-  glpkAPI::setRowsBndsGLPK(model, i = 1, lb = NULL, ub = pm$budget,
+  glpkAPI::setRowsBndsGLPK(model, i = seq_along(pm$targets),
+                           lb = rep(0, length(pm$targets)),
+                           ub = NULL, 
+                           type = rep(glpkAPI::GLP_LO, length(pm$targets)))
+  glpkAPI::setRowsBndsGLPK(model, i = nrow(A), lb = NULL,
+                           ub = pm$budget,
                            type = glpkAPI::GLP_UP)
-
   # locked planning units
   if (length(pm$locked_in) > 0) {
     lb <- rep(1, length(pm$locked_in))
@@ -184,13 +195,13 @@ prioritize_glpk.maxcover_model <- function(
   included <- pm$included
   rm(pm)
   t <- system.time(glpkAPI::solveMIPGLPK(model))
-
+  
   # if some planning units were excluded, convert back to full set
   if (!isTRUE(included)) {
     x <- rep(NA, length(included))
-    x[included] <- glpkAPI::mipColsValGLPK(model)
+    x[included] <- glpkAPI::mipColsValGLPK(model)[seq_len(n_pu)]
   } else {
-    x <- glpkAPI::mipColsValGLPK(model)
+    x <- glpkAPI::mipColsValGLPK(model)[seq_len(n_pu)]
   }
 
   # prepare return object

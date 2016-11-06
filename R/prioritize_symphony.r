@@ -168,11 +168,15 @@ prioritize_symphony.maxcover_model <- function(
   t <- system.time({
     results <- symphony_solve_LP(
       # objective function
-      obj = slam::col_sums(pm$rij),
+      obj = c(rep(0, length(pm$cost)), rep(1, length(pm$targets))),
       # constraints
-      mat = matrix(unname(pm$cost), nrow = 1),
-      dir = "<=",
-      rhs = pm$budget,
+      mat = rbind(
+        cbind(pm$rij, slam::simple_triplet_diag_matrix(v=-pm$targets)),
+        slam::simple_triplet_matrix(i=rep(1, length(pm$cost)),j=seq_along(pm$cost), v=pm$cost,
+                                    nrow=1, ncol=length(pm$cost)+length(pm$targets))
+      ),
+      dir = c(rep('>=', length(pm$targets)), '<='),
+      rhs = c(rep(0, length(pm$targets)), pm$budget),
       # binary decision variables
       types = "B",
       # locked planning units
@@ -188,6 +192,9 @@ prioritize_symphony.maxcover_model <- function(
       verbosity = 1
     )
   })
+
+  # remove indicator variabes
+  results$solution <- results$solution[seq_along(pm$cost)]
 
   # if some planning units were excluded, convert back to full set
   if (!isTRUE(pm$included)) {
@@ -278,16 +285,24 @@ relaxed_symphony.maxcover_model <- function(pm) {
   # solve relaxed
   results <- symphony_solve_LP(
     # objective function
-    obj = slam::col_sums(pm$rij),
+    obj =  c(rep(0, length(pm$cost)), rep(1, length(pm$targets))),
     # structural constraints
-    mat = matrix(unname(pm$cost[]), nrow = 1),
-    dir = "<=",
-    rhs = pm$budget,
+    mat = rbind(
+    cbind(pm$rij, slam::simple_triplet_diag_matrix(v=-pm$targets)),
+    slam::simple_triplet_matrix(i=rep(1, length(pm$cost)),j=seq_along(pm$cost), v=pm$cost,
+                                nrow=1, ncol=length(pm$cost)+length(pm$targets))
+    ),
+    dir = c(rep('>=', length(pm$targets)), '<='),
+    rhs = c(rep(0, length(pm$targets)), pm$budget),
     # decision variables between 0 and 1
-    types = "C",
+    types = c(rep("C", length(pm$cost)), rep("B", length(pm$targets))),
     bounds = bounds,
     # goal is to minimize objective function
     max = TRUE
   )
+  
+  # remove indicator variabes
+  results$solution <- results$solution[seq_along(pm$cost)]
+  
   list(x = results$solution, objval = results$objval)
 }

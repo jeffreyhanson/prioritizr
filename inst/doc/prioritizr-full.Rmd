@@ -1,7 +1,7 @@
 ---
 title: "Conservation Prioritization with Integer Programming in R"
 author: "Matt Strimas-Mackey"
-date: "`r Sys.Date()`"
+date: "2016-11-05"
 output:
   html_document:
     toc: true
@@ -13,14 +13,7 @@ vignette: >
   %\VignetteEncoding{UTF-8}
 ---
 
-```{r, echo = FALSE}
-knitr::opts_chunk$set(
-  collapse = TRUE,
-  comment = "#>",
-  fig.path = "figures/full_",
-  fig.align = "center"
-)
-```
+
 
 # Introduction
 
@@ -36,7 +29,8 @@ SYMPHONY: `Rsymphony` (on CRAN) and `lpsymphony` (on Bioconductor). On Windows a
 - The GNU Linear Programming Kit ([GLPK](https://www.gnu.org/software/glpk/)) is an open-source package for solving linear and integer linear programs. The R package
 glpkAPI provides an interface to the low-level GLPK API.
 
-```{r packages, message=FALSE}
+
+```r
 library(prioritizr)
 # for plotting
 library(rasterVis)
@@ -47,7 +41,8 @@ library(viridis)
 
 The function `gaussian_field()` can be used to generate spatially auto-correlated random fields, to be used as semi-realistic spatial variables. All conservation prioritization problems involve balancing a trade-off between representing features of conservation interest and minimizing the cost of protection. Therefore we start by generating distributions for four species and a cost layer, all on a 100x100 raster grid of planning units.
 
-```{r generate-data}
+
+```r
 set.seed(1)
 # raster 100x100 template
 e <- raster::extent(0, 100, 0, 100)
@@ -62,12 +57,19 @@ species <- setNames(species, letters[1:raster::nlayers(species)])
 levelplot(species, main = 'Species Distributions', layout = c(2, 2),
           scales = list(draw = FALSE),
           col.regions = c("grey20", "#fd9900"), colorkey = FALSE)
+```
+
+<img src="figures/full_generate-data-1.png" title="plot of chunk generate-data" alt="plot of chunk generate-data" style="display: block; margin: auto;" />
+
+```r
 # genrate cost layer
 cost <- gaussian_field(r, 20, mean = 1000, variance = 500)
 cost <- setNames(cost, "cost")
 levelplot(cost, main = "Cost", margin = FALSE,
           col.regions = viridis::viridis(100))
 ```
+
+<img src="figures/full_generate-data-2.png" title="plot of chunk generate-data" alt="plot of chunk generate-data" style="display: block; margin: auto;" />
 
 ## Minimum set cover problem
 
@@ -76,9 +78,11 @@ In the context of systematic reserve design, the minimum set cover problem seeks
 This problem is equivalent to a simplified Marxan reserve design problem,
 with the Boundary Length Modifier (BLM) set to zero. To specify a prioritization model of this type we use the `minsetcover_model()` function to create a `minsetcover_model` S3 object. This function takes data in a variety of formats (raster, vector, or tabular) and generates a standard object encapsulating the prioritization problem. Here we set targets for all species to protect 20% of their existing range.
 
-```{r msc_model}
+
+```r
 msc_model <- minsetcover_model(x = cost, features = species, targets = 0.2)
 class(msc_model)
+#> [1] "minsetcover_model" "prioritizr_model"
 ```
 
 ## Maximum coverage problem
@@ -87,37 +91,53 @@ The maximum coverage problem seeks to find the set of planning units that maximi
 
 This problem is roughly the opposite of what the conservation planning software Marxan does. To specify a prioritization model of this type we use the `maxcover_model()` function to create a `maxcover_model` S3 object. This function takes data in a variety of formats (raster, vector, or tabular) and generates a standard object encapsulating the prioritization problem. Here we set the budget to 25% of the total cost of the study area.
 
-```{r mc_model}
+
+```r
 b_25 <- 0.25 * raster::cellStats(cost, "sum")
-mc_model <- maxcover_model(x = cost, features = species, budget = b_25)
+mc_model <- maxcover_model(x = cost, features = species, budget = b_25, targets = 0.2)
 class(mc_model)
+#> [1] "maxcover_model"   "prioritizr_model"
 ```
 
 ## Solving prioritization problems
 
 The function `prioritize()` offers a unified interface to solving either type of prioritization problem using any of the available solvers. To solve the minimum set cover problem to within 0.1% of optimality use:
 
-```{r msc_solve, results="hide"}
+
+```r
 msc_results <- prioritize(msc_model, gap = 0.001)
 ```
 
 By default, this function uses the best available solver, which is Gurobi if it is installed. Alternatively, the solver can be specified explicitly. For example, we solve the maximum coverage problem with SYMPHONY:
 
-```{r mc_solve, results="hide"}
+
+```r
 mc_results <- prioritize(mc_model, solver = "symphony", gap = 0.001)
 ```
 
 The resulting solution can be displayed with `plot_selection()`:
 
-```{r solutions}
+
+```r
 plot_selection(cost, msc_results$x, title = "Minimum Set Cover Solution")
+```
+
+<img src="figures/full_solutions-1.png" title="plot of chunk solutions" alt="plot of chunk solutions" style="display: block; margin: auto;" />
+
+```r
 plot_selection(cost, mc_results$x, title = "Maximum Cover Solution")
 ```
 
+<img src="figures/full_solutions-2.png" title="plot of chunk solutions" alt="plot of chunk solutions" style="display: block; margin: auto;" />
+
 The objective function values for these solutions can be access with:
 
-```{r objectives}
+
+```r
 # minimum set cover objective
 msc_results$objval
+#> [1] 985393.9
 # maximum cover objective
 mc_results$objval
+#> [1] 4
+```

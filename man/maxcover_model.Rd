@@ -9,14 +9,17 @@
 \usage{
 maxcover_model(x, ...)
 
-\method{maxcover_model}{numeric}(x, budget, rij, locked_in = integer(),
-  locked_out = integer(), ...)
+\method{maxcover_model}{numeric}(x, targets, budget, rij,
+  locked_in = integer(), locked_out = integer(),
+  target_type = c("relative", "absolute"), ...)
 
-\method{maxcover_model}{Raster}(x, features, budget, rij,
-  locked_in = integer(), locked_out = integer(), ...)
+\method{maxcover_model}{Raster}(x, features, targets, budget, rij,
+  locked_in = integer(), locked_out = integer(),
+  target_type = c("relative", "absolute"), ...)
 
-\method{maxcover_model}{SpatialPolygons}(x, features, budget, rij,
-  locked_in = integer(), locked_out = integer(), ...)
+\method{maxcover_model}{SpatialPolygons}(x, features, targets, budget, rij,
+  locked_in = integer(), locked_out = integer(),
+  target_type = c("relative", "absolute"), ...)
 }
 \arguments{
 \item{x}{object specifying the planning units to use in the reserve design
@@ -47,6 +50,12 @@ maxcover_model(x, ...)
 
 \item{...}{additional arguments passed on to methods}
 
+\item{targets}{numeric; representation targets either as proportion (between
+0 and 1) of total representation level when \code{target_type = "relative"}
+(the default), or absolute targets when \code{target_type = "absolute"}.
+The order of the targets should match the ordering in the \code{features}
+argument.}
+
 \item{budget}{numeric; budget for reserve.}
 
 \item{rij}{numeric matrix (optional); matrix of representation levels of
@@ -74,6 +83,10 @@ Alternatively, if \code{x} is a \code{RasterLayer}, then \code{locked_out}
 can be a binary \code{RasterLayer} with 1s identifying the planning units
 to lock out.}
 
+\item{target_type}{"relative" or "absolute"; specifies whether the
+\code{target} argument should be interpreted as relative to the total level
+of representation or as an absolute target}
+
 \item{features}{RasterStack object; the distribution of conservation
 features. Missing values (i.e. \code{NA}s) can be used to indicate the
 absence of a feature in a particular cell instead of explicitly setting
@@ -91,6 +104,7 @@ A \code{maxcoverage_model} object describing the prioritization
 \itemize{
   \item \code{cost}: numeric vector of planning unit costs
   \item \code{rij}: representation matrix
+  \item \code{targets}: absolute feature targets
   \item \code{budget}: budget for reserve
   \item \code{locked_in}: indices of locked in planning units
   \item \code{locked_out}: indices of locked out planning units
@@ -108,8 +122,8 @@ a standardized format.
 }
 \details{
 In the context of systematic reserve design, the maximum coverage
-  problem seeks to find the set of planning units that maximizes the overall
-  level of representation across a suite of conservation features, while
+  problem seeks to find the set of planning units that maximizes the number
+  of representation targets across a suite of conservation features, while
   keeping cost within a fixed budget. The cost is often either the area of
   the planning units or the opportunity cost of foregone commericial
   activities (e.g. from logging or agriculture). Representation level is
@@ -145,17 +159,20 @@ cost[] <- rnorm(raster::ncell(cost), mean = 100, sd = 10)
 cost <- setNames(cost, "cost")
 
 # prepare prioritization model with budget at 25\% of total cost
+# and targets as 50\% of the features' distributions
 b_25 <- 0.25 * raster::cellStats(cost, "sum")
-model <- maxcover_model(x = cost, features = f, budget = b_25)
+model <- maxcover_model(x = cost, features = f, budget = b_25,
+                        targets = 0.5)
 
 # the representation matrix (rij) can be supplied explicitly,
 # in which case the features argument is no longer required
 rep_mat <- unname(t(f[]))
-model <- maxcover_model(x = cost, rij = rep_mat, budget = b_25)
+model <- maxcover_model(x = cost, rij = rep_mat, budget = b_25,
+                        targets = 0.5)
 
 # cells can be locked in or out of the final solution
 model <- maxcover_model(x = cost, features = f, budget = b_25,
-                        locked_in = 6:10,
+                        targets = 0.5, locked_in = 6:10,
                         locked_out = 16:20)
 # alternatively, binary rasters can be supplied indicating locked in/out
 r_locked_in <- raster::raster(r)
@@ -163,20 +180,21 @@ r_locked_in[] <- 0
 # lock in cells 6-10
 r_locked_in[6:10] <- 1
 model_raste_lock <- maxcover_model(x = cost, features = f, budget = b_25,
-                                   locked_in = r_locked_in,
+                                   locked_in = r_locked_in, targets=0.5,
                                    locked_out = 16:20)
 
-# if some cells are to be exlcuded, e.g. those outside study area, set
+# if some cells are to be excluded, e.g. those outside study area, set
 # the cost to NA for these cells.
 cost_na <- cost
 cost_na[6:10] <- NA
-model_na <- maxcover_model(x = cost_na, features = f, budget = b_25)
+model_na <- maxcover_model(x = cost_na, features = f, budget = b_25,
+                           targets = 0.5)
 # the model object now contains an included component specifying which
 # cells are to be included
 model_na$included
 which(!model_na$included)
 # note that the representation matrix now has fewer columns because
-# the decision variables corresponding to exlcuded cells have been removed
+# the decision variables corresponding to excluded cells have been removed
 model$rij
 model_na$rij
 
@@ -185,7 +203,8 @@ model_na$rij
 # longer to execute with polygons because summarizing features over planning
 # units is less efficient.
 cost_spdf <- raster::rasterToPolygons(cost)
-model_spdf <- maxcover_model(x = cost_spdf, features = f, budget = b_25)
+model_spdf <- maxcover_model(x = cost_spdf, features = f, budget = b_25,
+                             targets = 0.5)
 }
 \seealso{
 \code{\link{minsetcover_model}} for the minimum set cover problem.
