@@ -45,6 +45,7 @@ site: document readme
 	cp -f inst/vign/prioritizr-full.Rmd vignettes/prioritizr-full.Rmd
 	cp -f inst/vign/prioritizr-quickstart.Rmd vignettes/prioritizr-quickstart.Rmd
 	R -e "pkgdown::build_site()"
+	cp -rf README/ docs/README/
 	rm -rf vignettes/*
 	rm -rf inst/doc/*
 
