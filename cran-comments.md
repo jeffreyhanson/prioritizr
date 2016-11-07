@@ -19,12 +19,16 @@ There were 2 NOTEs
   Maintainer: 'Matthew Strimas-Mackey <mstrimas@gmail.com>'
   New submission
   
-  __This note has occurred because I have not submitted a package to CRAN before._
+  _This note has occurred because I have not submitted a package to CRAN before._
   
 * checking package dependencies ... NOTE
   package suggested but not available for checking: 'gurobi', 'lpsymphony', 'marxan'
   
   _This package is enhanced by several R packages not available on CRAN. The 'marxan' package is available on GitHub and the 'lpsymphony' package is available on Bioconductor. 'gurobi' R package is an R package that is distributed along with the gurobi program. Several existing R packages on CRAN use the gurobi R package (eg. cherry, DESP)._
+  
+* Examples with CPU or elapsed time > 10s
+  
+  _This package performs solves combinatoral optimization problems, which necessarily take a time even for simple example problems_
   
 # Downstream dependencies
 This package is not present on CRAN and therefore has no packages depending on it. 

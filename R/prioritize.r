@@ -12,7 +12,7 @@
 #'
 #' @section Prioritization problems:
 #'
-#' The \code{prioritizr} package currently handles two types of conservation
+#' The \code{prioritizr} package currently handles three types of conservation
 #' prioritization problems. Each type of problem has a corresponding
 #' \code{prioritizr_model} object that encapsulates the problem and is passed
 #' as the first argument to \code{prioritize()}:
@@ -30,17 +30,28 @@
 #'   with the Bounday Length Modifier (BLM) set to zero. Use
 #'   \code{\link{minsetcover_model}} to construct a minimum set cover model.
 #'
-#'   \item \bold{Maximum coverage}: find the set of planning units that maximizes the overall
-#'   level of representation across a suite of conservation features, while
-#'   keeping cost within a fixed budget. The cost is often either the area of
-#'   the planning units or the opportunity cost of foregone commericial
-#'   activities (e.g. logging or agriculture). Representation level is typically
-#'   given by the occupancy within each planning unit, however, some measure of
-#'   abundance or probability of occurence may also be used.
+#'   \item \bold{Maximum coverage}: find the set of planning units that
+#'   maximizes the overall level of representation across a suite of
+#'   conservation features, while keeping cost within a fixed budget. The cost
+#'   is often either the area of the planning units or the opportunity cost of
+#'   foregone commericial activities (e.g. logging or agriculture).
+#'   Representation level is typically given by the occupancy within each
+#'   planning unit, however, some measure of abundance or probability of
+#'   occurence may also be used.
 #'
 #'   This problem is roughly the opposite of what the conservation planning
 #'   software Marxan does. Use \code{\link{maxcover_model}} to construct a
-#'   minimum set cover model.
+#'   maximum coverage model.
+#'
+#'   \item \bold{Maximum coverage of targets}: this is a modified version of
+#'   the maximum coverage problem. Each conservation feature is assigned a
+#'   representation target and the objective is to find the set of planning
+#'   units that meets most targets while remaining within a fixed budget.
+#'
+#'   This problem is meant to be a hybrid between the maximum coverage problem
+#'   and a Marxan-like minimum set cover problem in that it allows for both a
+#'   budget and targets to be set. Use \code{\link{maxtargets_model}} to
+#'   construct a maximum target coverage model.
 #' }
 #'
 #' @section Solvers:
@@ -152,15 +163,21 @@
 #' # prepare maximum coverage prioritization model
 #' # set budget to 25% of total cost
 #' b_25 <- 0.25 * raster::cellStats(cost, "sum")
-#' mc_model <- maxcover_model(x = cost, features = f, budget = b_25,
-#'                            targets = 0.5)
+#' mc_model <- maxcover_model(x = cost, features = f, budget = b_25)
 #' # solve to within 1 percent of optimality
 #' # pick solver automatically (uses Gurobi if installed)
 #' mc_results <- prioritize(mc_model, gap = 0.001)
 #' plot_selection(cost, mc_results$x)
-#' # specify SYMPHONY solver
-#' mc_results_symphony <- prioritize(mc_model, solver = "symphony", gap = 0.001)
-#' plot_selection(cost, mc_results_symphony$x)
+#'
+#' # prepare maximum target coverage prioritization model
+#' # set budget to 25% of total cost
+#' b_25 <- 0.25 * raster::cellStats(cost, "sum")
+#' mtc_model <- maxtargets_model(x = cost, features = f, budget = b_25,
+#'                             targets = 0.5)
+#' # solve to within 1 percent of optimality
+#' # pick solver automatically (uses Gurobi if installed)
+#' mtc_results <- prioritize(mtc_model, gap = 0.001)
+#' plot_selection(cost, mtc_results$x)
 prioritize <- function(pm,
                        solver = c("best", "gurobi", "symphony", "glpk"),
                        gap = 1e-4,

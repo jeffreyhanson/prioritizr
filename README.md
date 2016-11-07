@@ -17,7 +17,7 @@ The currently supported solvers are as follows. Each must be installed separatel
 
 - [Gurobi](http://gurobi.com) is a state-of-the-art commercial optimization software with an R package interface. It is by far the fastest of the solvers available in this package, however, it is also the only one that isn't free. That said, free academic licenses are available.
 - [SYMPHONY](https://projects.coin-or.org/SYMPHONY) is an open-source integer programming solver that is part of the Computational Infrastructure for Operations Research (COIN-OR) project, an initiative to promote development of open-source tools for operations research (a field that includes linear programming). Two R packages exist to provide interfaces to
-SYMPHONY: `Rsymphony` (on CRAN) and `lpsymphony` (on Bioconductor). On Windows and Mac, \code{lpsymphony} may be easier to install.
+SYMPHONY: `Rsymphony` (on CRAN) and `lpsymphony` (on Bioconductor). On Windows and Mac, `lpsymphony` may be easier to install.
 - The GNU Linear Programming Kit ([GLPK](https://www.gnu.org/software/glpk/)) is an open-source package for solving linear and integer linear programs. The R package
 glpkAPI provides an interface to the low-level GLPK API.
 
@@ -33,7 +33,7 @@ devtools::install_github("mstrimas/prioritizr")
 
 # Example usage
 
-For full details on this package, consult the vignette with `browseVignettes("prioritizr")`. What follows are some simple example of how this package can be used to solve conservation prioritization problems.
+For full details on this package, consult the vignette with `browseVignettes("prioritizr")` or the [package documentation](http://mstrimas.github.io/prioritizr). What follows are some simple example of how this package can be used to solve conservation prioritization problems.
 
 ## Required Packages
 
@@ -73,7 +73,8 @@ levelplot(species, main = 'Species Distributions', layout = c(2, 2),
 # genrate cost layer
 cost <- gaussian_field(r, 20, mean = 1000, variance = 500)
 cost <- setNames(cost, "cost")
-levelplot(cost, main = "Cost", margin = FALSE, col.regions = viridis)
+levelplot(cost, main = "Cost", margin = FALSE,
+          col.regions = viridis::viridis(100))
 ```
 
 ![plot of chunk generate-data](README/generate-data-2.png)
@@ -83,7 +84,7 @@ levelplot(cost, main = "Cost", margin = FALSE, col.regions = viridis)
 In the context of systematic reserve design, the minimum set cover problem seeks to find the set of planning units that minimizes the overall cost of a reserve network, while meeting a set of representation targets for the conservation features. The cost is often either the area of the planning units or the opportunity cost of foregone commercial activities (e.g. logging or agriculture). The representation targets ensure that each species is adequately represented in the reserve network.
 
 This problem is equivalent to a simplified Marxan reserve design problem,
-with the Boundary Length Modifier (BLM) set to zero. To specify a prioritization model of this type we use the `minsetcover_model()` function to create a `minsetcover_model` S3 object. This function takes data in a variety of formats (raster, vector, or tabular) and generates a standard object encapsulating the prioritization problem. Here we set targets for all species to protect 20% of their existing range.
+with the Boundary Length Modifier (BLM) set to zero. To specify a prioritization model of this type we use the `minsetcover_model()` function to create a `minsetcover_model` S3 object. This function takes data in a variety of formats (raster, vector, or tabular) and generates a standard object encapsulating the prioritization problem. Here I set targets such that 20% of each species' existing range will be protected.
 
 
 ```r
@@ -94,16 +95,31 @@ class(msc_model)
 
 ## Maximum coverage problem
 
-The maximum coverage problem seeks to find the set of planning units that maximizes the overall level of representation across a suite of conservation features, while keeping cost within a fixed budget. The cost is often either the area of the planning units or the opportunity cost of foregone commercial activities (e.g. from logging or agriculture). Representation level is typically given by the occupancy within each planning unit, however, some measure of abundance or probability of occurrence may also be used.
+The maximum coverage problem seeks to find the set of planning units that maximizes the overall level of representation across a suite of conservation features, while keeping cost within a fixed budget. The cost is often either the area of the planning units or the opportunity cost of foregone commercial activities (e.g. from logging or agriculture). Representation within each planning unit is typically given by the occupancy of each species, however, some measure of abundance or probability of occurrence may also be used.
 
-This problem is roughly the opposite of what the conservation planning software Marxan does. To specify a prioritization model of this type we use the `maxcover_model()` function to create a `maxcover_model` S3 object. This function takes data in a variety of formats (raster, vector, or tabular) and generates a standard object encapsulating the prioritization problem. Here we set the budget to 25% of the total cost of the study area.
+This problem is roughly the opposite of what the conservation planning software Marxan does. To specify a prioritization model of this type we use the `maxcover_model()` function to create a `maxcover_model` S3 object. This function takes data in a variety of formats (raster, vector, or tabular) and generates a standard object encapsulating the prioritization problem. Here we set the budget to 25% of the total cost of the study area .
 
 
 ```r
 b_25 <- 0.25 * raster::cellStats(cost, "sum")
-mc_model <- maxcover_model(x = cost, features = species, budget = b_25, targets = 0.2)
+mc_model <- maxcover_model(x = cost, features = species, budget = b_25)
 class(mc_model)
 #> [1] "maxcover_model"   "prioritizr_model"
+```
+
+## Maximum target coverage problem
+
+The maximum target coverage problem is a modified version of the the maximum coverage problem. Each conservation feature is assigned a representation target and the objective is to find the set of planning units that meets the most targets while remaining within a fixed budget. 
+
+This problem is meant to be a hybrid between the maximum coverage problem and a Marxan-like minimum set cover problem in that it allows for both a budget and targets to be set. To specify a prioritization model of this type we use the `maxtargets_model()` function to create a `maxtargets_model` S3 object. This function takes data in a variety of formats (raster, vector, or tabular) and generates a standard object encapsulating the prioritization problem. Here we set the budget to 10% of the total cost of the study area and choose targets such that 20% of each species' existing range will be protected.
+
+
+```r
+b_10 <- 0.1 * raster::cellStats(cost, "sum")
+mtc_model <- maxtargets_model(x = cost, features = species, targets = 0.2, 
+                           budget = b_25)
+class(mtc_model)
+#> [1] "maxtargets_model" "prioritizr_model"
 ```
 
 ## Solving prioritization problems
@@ -115,11 +131,18 @@ The function `prioritize()` offers a unified interface to solving either type of
 msc_results <- prioritize(msc_model, gap = 0.001)
 ```
 
-By default, this function uses the best available solver, which is Gurobi if it is installed. Alternatively, the solver can be specified explicitly. For example, we solve the maximum coverage problem with SYMPHONY:
+By default, this function uses the best available solver, which is Gurobi if it is installed. Alternatively, the solver can be specified explicitly. For example, to solve the maximum coverage problem with SYMPHONY use:
 
 
 ```r
 mc_results <- prioritize(mc_model, solver = "symphony", gap = 0.001)
+```
+
+And to solve the maximum target coverage problem with GLPK use:
+
+
+```r
+mtc_results <- prioritize(mtc_model, solver = "glpk", gap = 0.001)
 ```
 
 The resulting solution can be displayed with `plot_selection()`:
@@ -132,27 +155,28 @@ plot_selection(cost, msc_results$x, title = "Minimum Set Cover Solution")
 ![plot of chunk solutions](README/solutions-1.png)
 
 ```r
-plot_selection(cost, mc_results$x, title = "Maximum Cover Solution")
+plot_selection(cost, mc_results$x, title = "Maximum Coverage Solution")
 ```
 
 ![plot of chunk solutions](README/solutions-2.png)
 
-The objective function values for these solutions can be access with:
+```r
+plot_selection(cost, mtc_results$x, title = "Maximum Target Coverage Solution")
+```
+
+![plot of chunk solutions](README/solutions-3.png)
+
+Finally, the objective function values for these solutions can be access with:
 
 
 ```r
 # minimum set cover objective
 msc_results$objval
 #> [1] 985393.9
-# maximum cover objective
+# maximum coverage objective
 mc_results$objval
-#> [1] 4
+#> [1] 5667
+# maximum target coverage objective
+mtc_results$objval
+#> [1] 3.998998
 ```
-
-For full details on the functionality of this package, consult the vignette:
-
-
-```r
-browseVignettes("prioritizr")
-```
-

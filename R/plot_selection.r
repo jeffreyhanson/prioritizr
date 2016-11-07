@@ -53,9 +53,10 @@ plot_selection.Raster <- function(pu, x,
   pu[] <- x
   # make this a categorical raster
   pu <- raster::ratify(pu)
-  rat <- raster::levels(pu)[[1]]
-  rat$status <- c("Not Selected", "Selected")
-  levels(pu) <- rat
+  rat <- data.frame(ID = c(0, 1),
+                    status = c("Not Selected", "Selected"),
+                    stingsAsFactors = FALSE)
+  suppressWarnings({levels(pu) <- rat})
   rasterVis::levelplot(pu, main = title, scales = list(draw = axes),
                        col.regions = colours,
                        colorkey = list(space = "bottom", height = 1), ...)

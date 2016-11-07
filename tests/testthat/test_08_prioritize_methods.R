@@ -1,4 +1,4 @@
-context('07 prioritize methods')
+context('08 prioritize methods')
 
 test_that('set_targets', {
   # data
@@ -62,4 +62,3 @@ test_that('summarize_features', {
   expect_error(summarize_features(sq_grid[0,], r_features),
                info='no polygons in spatial polygons object')
 })
-

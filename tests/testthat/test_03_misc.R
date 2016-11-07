@@ -20,14 +20,20 @@ test_that('gaussian_field', {
 
 test_that('make_grid', {
   # data
-  r1 <- raster::raster(matrix(1:16, 4, 4)) # raster with finite values in all cells
-  r2 <- raster::raster(matrix(c(1:15, NA), 4, 4)) # raster with one NA value
-  r3 <- raster::raster(matrix(c(1:12, NA, NA, NA, NA), 4, 4)) # raster with one column of NA values
-  r4 <- raster::raster(matrix(rep(NA, 16), 4, 4)) # raster with all values as NA
+  # raster with finite values in all cells
+  r1 <- raster::raster(matrix(1:16, 4, 4))
+  # raster with one NA value
+  r2 <- raster::raster(matrix(c(1:15, NA), 4, 4))
+  # raster with one column of NA values
+  r3 <- raster::raster(matrix(c(1:12, NA, NA, NA, NA), 4, 4))
+  # raster with all values as NA
+  r4 <- raster::raster(matrix(rep(NA, 16), 4, 4))
   # define function
-  test_that_grid_is_valid_for_raster <- function(sp, rst, type=c('square', 'hexagonal'), label='') {
+  test_that_grid_is_valid_for_raster <- function(
+    sp, rst, type=c('square', 'hexagonal'), label='') {
     # init
-    rst <- raster::setValues(rst, 1) # NA values in raster should not affect grid generation
+    # NA values in raster should not affect grid generation
+    rst <- raster::setValues(rst, 1)
     type <- match.arg(type)
     label <- paste0(type, ' grid ', label)
     n_cells <- raster::ncell(rst)
@@ -39,8 +45,10 @@ test_that('make_grid', {
       info=paste0(label, ': grid has incorrect number of grid cells'))
     expect_equal(
       `dimnames<-`(rgeos::gCentroid(sp, byid=TRUE)@coords, NULL),
-      `dimnames<-`(as.matrix(raster::rasterToPoints(rst, spatial=FALSE)[,1:2]), NULL),
-      info=paste0(label, ': grid has incorrect location of grid cell centroids'))
+      `dimnames<-`(as.matrix(raster::rasterToPoints(rst, spatial=FALSE)[,1:2]),
+                   NULL),
+      info=paste0(label,
+                  ': grid has incorrect location of grid cell centroids'))
     expect_equal(unname(rgeos::gArea(sp, byid=TRUE)),
                  rep(prod(raster::res(rst)), n_cells),
                  info=paste0(label, ': grid has cells with incorrect area'))
@@ -68,7 +76,8 @@ test_that('make_grid', {
   run_all_tests_on_raster <- function(rst, label) {
     ## init
     # compute areas and widths
-    sq_cell_widths <- c(raster::res(rst)[1], raster::res(rst)[1]/2, raster::res(rst)[1]*2)
+    sq_cell_widths <- c(raster::res(rst)[1], raster::res(rst)[1]/2,
+                        raster::res(rst)[1]*2)
     sq_cell_areas <- sq_cell_widths^2
     hex_cell_areas <- sq_cell_areas
     hex_cell_widths <- sqrt(2 * hex_cell_areas / sqrt(3))
@@ -99,15 +108,18 @@ test_that('make_grid', {
              raster::disaggregate(rst, fact=2),
              raster::aggregate(rst, fact=2)),
         list('square')[c(1,1,1)],
-        as.list(paste(label[c(1,1,1)], c('(original)', '(disaggregated)', '(aggregated)'))))
+        as.list(paste(label[c(1,1,1)],
+                      c('(original)', '(disaggregated)', '(aggregated)'))))
     Map(test_that_grid_is_valid_for_raster,
         hex_grids1,
         list(rst,
              raster::disaggregate(rst, fact=2),
              raster::aggregate(rst, fact=2)),
           list('hexagon')[c(1,1,1)],
-          as.list(paste(label[c(1,1,1)], c('(original)', '(disaggregated)', '(aggregated)'))))
-    # check that grids generated using corresponding cell_area and cell_width values are equal
+          as.list(paste(label[c(1,1,1)],
+                        c('(original)','(disaggregated)', '(aggregated)'))))
+    # check that grids generated using corresponding
+    # cell_area and cell_width values are equal
     Map(expect_equal, sq_grids1, sq_grids2)
     Map(expect_equal, hex_grids1, hex_grids2)
   }
@@ -126,4 +138,3 @@ test_that('make_grid', {
   expect_error(make_grid(r1, cell_area = Inf, type = 'square'))
   expect_error(make_grid(r1, cell_area = NA, type = 'square'))
 })
-

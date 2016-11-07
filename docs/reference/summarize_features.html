@@ -6,7 +6,7 @@
 <meta http-equiv="X-UA-Compatible" content="IE=edge">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-<title>Calculate representation level of features in planning units <U+2014> summarize_features <e2><80><a2> prioritizr</title>
+<title>Calculate representation level of features in planning units — summarize_features • prioritizr</title>
 
 <!-- jquery -->
 <script src="https://code.jquery.com/jquery-3.1.0.min.js" integrity="sha384-nrOSfDHtoPMzJHjVTdCopGqIqeYETSXhZDFyniQ8ZHcVy08QesyHcnOUpMpqnmWq" crossorigin="anonymous"></script>
@@ -135,13 +135,13 @@ store non-zero elements, which uses less memory.</dd>
 <span class='no'>rij_matrix</span> <span class='kw'>&lt;-</span> <span class='fu'>summarize_features</span>(<span class='no'>hex_grid</span>, <span class='no'>r_features</span>, <span class='kw'>sparse</span> <span class='kw'>=</span> <span class='fl'>FALSE</span>)
 <span class='fu'>dim</span>(<span class='no'>rij_matrix</span>)</div><div class='output co'>#&gt; [1]  4 20</div><div class='input'><span class='co'># data frame</span>
 <span class='no'>rij_df</span> <span class='kw'>&lt;-</span> <span class='fu'>summarize_features</span>(<span class='no'>hex_grid</span>, <span class='no'>r_features</span>, <span class='kw'>matrix</span> <span class='kw'>=</span> <span class='fl'>FALSE</span>)
-<span class='fu'>head</span>(<span class='no'>rij_df</span>)</div><div class='output co'>#&gt;   feature pu amount
-#&gt; 2       1  2     16
-#&gt; 3       1  3     70
-#&gt; 5       1  5    122
-#&gt; 6       1  6    123
-#&gt; 7       1  7      6
-#&gt; 9       1  9    105</div></pre>
+<span class='fu'>head</span>(<span class='no'>rij_df</span>)</div><div class='output co'>#&gt;    feature pu amount
+#&gt; 30       3  1      5
+#&gt; 1        1  2     16
+#&gt; 31       3  2    134
+#&gt; 50       4  2      7
+#&gt; 2        1  3     70
+#&gt; 16       2  3      7</div></pre>
   </div>
   <div class="col-md-3 hidden-xs hidden-sm" id="sidebar">
     <h2>Contents</h2>

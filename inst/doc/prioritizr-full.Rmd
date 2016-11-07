@@ -1,14 +1,14 @@
 ---
 title: "Conservation Prioritization with Integer Programming in R"
 author: "Matt Strimas-Mackey"
-date: "2016-11-05"
+date: "2016-11-07"
 output:
   html_document:
     toc: true
     toc_depth: 2
     theme: united
 vignette: >
-  %\VignetteIndexEntry{Vignette Title}
+  %\VignetteIndexEntry{"Conservation Prioritization with prioritizr"}
   %\VignetteEngine{knitr::rmarkdown}
   %\VignetteEncoding{UTF-8}
 ---
@@ -139,5 +139,5 @@ msc_results$objval
 #> [1] 985393.9
 # maximum cover objective
 mc_results$objval
-#> [1] 4
+#> [1] 5667
 ```
