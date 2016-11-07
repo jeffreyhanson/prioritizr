@@ -10,11 +10,11 @@ prioritize_symphony <- function(pm,
 
 #' @export
 prioritize_symphony.minsetcover_model <- function(
-  pm,
-  gap = 1e-4,
-  time_limit = Inf,
-  first_feasible = FALSE,
-  bound = NA_real_) {
+    pm,
+    gap = 1e-4,
+    time_limit = Inf,
+    first_feasible = FALSE,
+    bound = NA_real_) {
   # assertions on arguments
   assert_that(inherits(pm, "prioritizr_model"),
               assertthat::is.number(gap),
@@ -110,11 +110,11 @@ prioritize_symphony.minsetcover_model <- function(
 
 #' @export
 prioritize_symphony.maxcover_model <- function(
-  pm,
-  gap = 1e-4,
-  time_limit = Inf,
-  first_feasible = FALSE,
-  bound = NA_real_) {
+    pm,
+    gap = 1e-4,
+    time_limit = Inf,
+    first_feasible = FALSE,
+    bound = NA_real_) {
   # assertions on arguments
   assert_that(inherits(pm, "prioritizr_model"),
               assertthat::is.number(gap),
@@ -211,11 +211,11 @@ prioritize_symphony.maxcover_model <- function(
 
 #' @export
 prioritize_symphony.maxtargets_model <- function(
-  pm,
-  gap = 1e-4,
-  time_limit = Inf,
-  first_feasible = FALSE,
-  bound = NA_real_) {
+    pm,
+    gap = 1e-4,
+    time_limit = Inf,
+    first_feasible = FALSE,
+    bound = NA_real_) {
   # assertions on arguments
   assert_that(inherits(pm, "prioritizr_model"),
               assertthat::is.number(gap),
@@ -265,20 +265,26 @@ prioritize_symphony.maxtargets_model <- function(
     stop("Neither Rsymphony nor lpsymphony are installed")
   }
 
+  # objective function
+  obj <- c(-0.01 * pm$cost / sum(pm$cost, na.rm = TRUE),
+           rep(1, length(pm$targets)))
+
+  # constraint matrix
+  const_mat <- rbind(
+    cbind(pm$rij, slam::simple_triplet_diag_matrix(v = -pm$targets)),
+    slam::simple_triplet_matrix(i = rep(1, length(pm$cost)),
+                                j = seq_along(pm$cost),
+                                v = pm$cost,
+                                nrow = 1,
+                                ncol = length(pm$cost) + length(pm$targets)))
+
   # solve
   t <- system.time({
     results <- symphony_solve_LP(
       # objective function
-      obj = c(rep(0, length(pm$cost)), rep(1, length(pm$targets))),
+      obj = obj,
       # constraints
-      mat = rbind(
-        cbind(pm$rij, slam::simple_triplet_diag_matrix(v = -pm$targets)),
-        slam::simple_triplet_matrix(i = rep(1, length(pm$cost)),
-                                    j = seq_along(pm$cost),
-                                    v = pm$cost,
-                                    nrow = 1,
-                                    ncol = length(pm$cost) + length(pm$targets))
-      ),
+      mat = const_mat,
       dir = c(rep('>=', length(pm$targets)), '<='),
       rhs = c(rep(0, length(pm$targets)), pm$budget),
       # binary decision variables
@@ -425,19 +431,26 @@ relaxed_symphony.maxtargets_model <- function(pm) {
   } else {
     stop("Neither Rsymphony nor lpsymphony are installed")
   }
-  # solve relaxed
-  results <- symphony_solve_LP(
-    # objective function
-    obj =  c(rep(0, length(pm$cost)), rep(1, length(pm$targets))),
-    # structural constraints
-    mat = rbind(
+
+  # objective function
+  obj <- c(-0.01 * pm$cost / sum(pm$cost, na.rm = TRUE),
+           rep(1, length(pm$targets)))
+
+  # constraint matrix
+  const_mat <- rbind(
     cbind(pm$rij, slam::simple_triplet_diag_matrix(v = -pm$targets)),
     slam::simple_triplet_matrix(i = rep(1, length(pm$cost)),
                                 j = seq_along(pm$cost),
                                 v = pm$cost,
                                 nrow = 1,
-                                ncol = length(pm$cost) + length(pm$targets))
-    ),
+                                ncol = length(pm$cost) + length(pm$targets)))
+
+  # solve relaxed
+  results <- symphony_solve_LP(
+    # objective function
+    obj =  obj,
+    # structural constraints
+    mat = const_mat,
     dir = c(rep('>=', length(pm$targets)), '<='),
     rhs = c(rep(0, length(pm$targets)), pm$budget),
     # decision variables between 0 and 1

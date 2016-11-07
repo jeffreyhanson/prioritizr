@@ -32,7 +32,7 @@ The currently supported solvers are as follows. Each must be installed separatel
 
 - [Gurobi](http://gurobi.com) is a state-of-the-art commercial optimization software with an R package interface. It is by far the fastest of the solvers available in this package, however, it is also the only one that isn't free. That said, free academic licenses are available.
 - [SYMPHONY](https://projects.coin-or.org/SYMPHONY) is an open-source integer programming solver that is part of the Computational Infrastructure for Operations Research (COIN-OR) project, an initiative to promote development of open-source tools for operations research (a field that includes linear programming). Two R packages exist to provide interfaces to
-SYMPHONY: `Rsymphony` (on CRAN) and `lpsymphony` (on Bioconductor). On Windows and Mac, \code{lpsymphony} may be easier to install.
+SYMPHONY: `Rsymphony` (on CRAN) and `lpsymphony` (on Bioconductor). On Windows and Mac, `lpsymphony` may be easier to install.
 - The GNU Linear Programming Kit ([GLPK](https://www.gnu.org/software/glpk/)) is an open-source package for solving linear and integer linear programs. The R package
 glpkAPI provides an interface to the low-level GLPK API.
 

@@ -15,7 +15,8 @@
 #'   typically given by the occupancy within each planning unit, however, some
 #'   measure of abundance or probability of occurence may also be used. The
 #'   representation targets ensure that each species is adequately represented
-#'   in the reserve network.
+#'   in the reserve network. If multiple solutions exists that all meet the
+#'   targets within the budget, the least expensive option will be selected.
 #'
 #'   This problem meant to be a hybrid between the maximum coverage problem and
 #'   a Marxan-like minimum set cover problem in that it allows for both a budget

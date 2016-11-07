@@ -249,10 +249,11 @@ prioritize_glpk.maxtargets_model <- function(
   glpkAPI::addColsGLPK(model, ncols = n_dv)
   # objective function
   # also specify no bounds on decision variables
+  obj <- c(-0.01 * pm$cost / sum(pm$cost, na.rm = TRUE),
+               rep(1, length(pm$targets)))
   glpkAPI::setColsBndsObjCoefsGLPK(model, j = seq.int(n_dv),
                                    lb = NULL, ub = NULL,
-                                   obj_coef = c(rep(0, length(pm$cost)),
-                                                rep(1, length(pm$targets))),
+                                   obj_coef = obj,
                                    type = rep(glpkAPI::GLP_BV, n_dv))
   # binary decision variables
   glpkAPI::setColsKindGLPK(model, j = seq.int(n_dv),

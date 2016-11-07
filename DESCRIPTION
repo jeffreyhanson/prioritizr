@@ -3,8 +3,8 @@ Type: Package
 Title: Systematic Conservation Prioritization in R
 Version: 0.1.2
 Authors@R: person("Matthew", "Strimas-Mackey", email="mstrimas@gmail.com", role = c("aut", "cre"))
-Description: Solve Marxan-like systematic reserve design problems using integer
-    programming techniques.
+Description: Solve systematic reserve design problems using integer programming 
+    techniques.
 Depends:
     R (>= 3.1.2)
 License: MIT + file LICENSE

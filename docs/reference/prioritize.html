@@ -273,11 +273,11 @@ independently to function:</p>
 #&gt;   RHS range       [2e+02, 1e+03]
 #&gt; Found heuristic solution: objective 1.81733e+06
 #&gt; Presolve removed 0 rows and 506 columns
-#&gt; Presolve time: 0.13s
+#&gt; Presolve time: 0.06s
 #&gt; Presolved: 9 rows, 9494 columns, 25500 nonzeros
 #&gt; Variable types: 0 continuous, 9494 integer (9494 binary)
 #&gt; 
-#&gt; Root relaxation: objective 1.095607e+06, 45 iterations, 0.11 seconds
+#&gt; Root relaxation: objective 1.095607e+06, 45 iterations, 0.02 seconds
 #&gt; 
 #&gt;     Nodes    |    Current Node    |     Objective Bounds      |     Work
 #&gt;  Expl Unexpl |  Obj  Depth IntInf | Incumbent    BestBd   Gap | It/Node Time
@@ -285,7 +285,7 @@ independently to function:</p>
 #&gt;      0     0 1095606.74    0    8 1817330.63 1095606.74  39.7%     -    0s
 #&gt; H    0     0                    1096349.7912 1095606.74  0.07%     -    0s
 #&gt; 
-#&gt; Explored 0 nodes (45 simplex iterations) in 0.47 seconds
+#&gt; Explored 0 nodes (45 simplex iterations) in 0.13 seconds
 #&gt; Thread count was 2 (of 2 available processors)
 #&gt; 
 #&gt; Optimal solution found (tolerance 1.00e-03)
@@ -307,7 +307,7 @@ independently to function:</p>
 #&gt;   RHS range       [2e+06, 2e+06]
 #&gt; Found heuristic solution: objective 7260
 #&gt; Presolve removed 0 rows and 506 columns
-#&gt; Presolve time: 0.13s
+#&gt; Presolve time: 0.04s
 #&gt; Presolved: 1 rows, 9494 columns, 9494 nonzeros
 #&gt; Variable types: 0 continuous, 9494 integer (9494 binary)
 #&gt; 
@@ -319,7 +319,7 @@ independently to function:</p>
 #&gt;      0     0 10454.5980    0    1 7260.00000 10454.5980  44.0%     -    0s
 #&gt; H    0     0                    10453.000000 10454.5980  0.02%     -    0s
 #&gt; 
-#&gt; Explored 0 nodes (1 simplex iterations) in 0.32 seconds
+#&gt; Explored 0 nodes (1 simplex iterations) in 0.11 seconds
 #&gt; Thread count was 2 (of 2 available processors)
 #&gt; 
 #&gt; Optimal solution found (tolerance 1.00e-03)
@@ -327,48 +327,48 @@ independently to function:</p>
 <span class='co'># prepare maximum target coverage prioritization model</span>
 <span class='co'># set budget to 25% of total cost</span>
 <span class='no'>b_25</span> <span class='kw'>&lt;-</span> <span class='fl'>0.25</span> * <span class='kw'>raster</span><span class='kw'>::</span><span class='fu'>cellStats</span>(<span class='no'>cost</span>, <span class='st'>"sum"</span>)
-<span class='no'>mc_model</span> <span class='kw'>&lt;-</span> <span class='fu'><a href='maxtargets_model.html'>maxtargets_model</a></span>(<span class='kw'>x</span> <span class='kw'>=</span> <span class='no'>cost</span>, <span class='kw'>features</span> <span class='kw'>=</span> <span class='no'>f</span>, <span class='kw'>budget</span> <span class='kw'>=</span> <span class='no'>b_25</span>,
+<span class='no'>mtc_model</span> <span class='kw'>&lt;-</span> <span class='fu'><a href='maxtargets_model.html'>maxtargets_model</a></span>(<span class='kw'>x</span> <span class='kw'>=</span> <span class='no'>cost</span>, <span class='kw'>features</span> <span class='kw'>=</span> <span class='no'>f</span>, <span class='kw'>budget</span> <span class='kw'>=</span> <span class='no'>b_25</span>,
                             <span class='kw'>targets</span> <span class='kw'>=</span> <span class='fl'>0.5</span>)
 <span class='co'># solve to within 1 percent of optimality</span>
 <span class='co'># pick solver automatically (uses Gurobi if installed)</span>
-<span class='no'>mc_results</span> <span class='kw'>&lt;-</span> <span class='fu'>prioritize</span>(<span class='no'>mc_model</span>, <span class='kw'>gap</span> <span class='kw'>=</span> <span class='fl'>0.001</span>)</div><div class='output co'>#&gt; Optimize a model with 10 rows, 10009 columns and 35509 nonzeros
+<span class='no'>mtc_results</span> <span class='kw'>&lt;-</span> <span class='fu'>prioritize</span>(<span class='no'>mtc_model</span>, <span class='kw'>gap</span> <span class='kw'>=</span> <span class='fl'>0.001</span>)</div><div class='output co'>#&gt; Optimize a model with 10 rows, 10009 columns and 35509 nonzeros
 #&gt; Coefficient statistics:
 #&gt;   Matrix range    [1e+00, 2e+03]
-#&gt;   Objective range [1e+00, 1e+00]
+#&gt;   Objective range [9e-07, 1e+00]
 #&gt;   Bounds range    [1e+00, 1e+00]
 #&gt;   RHS range       [2e+06, 2e+06]
 #&gt; Found heuristic solution: objective -0
 #&gt; Presolve removed 0 rows and 506 columns
-#&gt; Presolve time: 0.15s
+#&gt; Presolve time: 0.05s
 #&gt; Presolved: 10 rows, 9503 columns, 35003 nonzeros
 #&gt; Variable types: 0 continuous, 9503 integer (9503 binary)
 #&gt; 
-#&gt; Root relaxation: objective 7.906133e+00, 51 iterations, 0.02 seconds
+#&gt; Root relaxation: objective 7.903633e+00, 235 iterations, 0.06 seconds
 #&gt; 
 #&gt;     Nodes    |    Current Node    |     Objective Bounds      |     Work
 #&gt;  Expl Unexpl |  Obj  Depth IntInf | Incumbent    BestBd   Gap | It/Node Time
 #&gt; 
-#&gt;      0     0    7.90613    0    5   -0.00000    7.90613      -     -    0s
-#&gt; H    0     0                       5.0000000    7.90613  58.1%     -    0s
-#&gt;      0     0    7.80505    0   10    5.00000    7.80505  56.1%     -    1s
-#&gt;      0     0    7.77352    0   12    5.00000    7.77352  55.5%     -    1s
-#&gt;      0     0    7.64891    0   13    5.00000    7.64891  53.0%     -    1s
-#&gt;      0     0    7.63365    0   16    5.00000    7.63365  52.7%     -    1s
-#&gt;      0     0    7.61580    0   18    5.00000    7.61580  52.3%     -    1s
-#&gt;      0     0    7.61407    0   22    5.00000    7.61407  52.3%     -    2s
-#&gt;      0     0    7.60112    0   25    5.00000    7.60112  52.0%     -    3s
-#&gt;      0     2    7.60112    0   25    5.00000    7.60112  52.0%     -    6s
-#&gt; *    6     0               3       6.0000000    6.63113  10.5%  71.8    7s
+#&gt;      0     0    7.90363    0    5   -0.00000    7.90363      -     -    0s
+#&gt; H    0     0                       4.9976229    7.90363  58.1%     -    0s
+#&gt;      0     0    7.80255    0   10    4.99762    7.80255  56.1%     -    0s
+#&gt;      0     0    7.77102    0   12    4.99762    7.77102  55.5%     -    0s
+#&gt;      0     0    7.64641    0   13    4.99762    7.64641  53.0%     -    0s
+#&gt;      0     0    7.63115    0   16    4.99762    7.63115  52.7%     -    0s
+#&gt;      0     0    7.61331    0   20    4.99762    7.61331  52.3%     -    1s
+#&gt;      0     0    7.61158    0   22    4.99762    7.61158  52.3%     -    1s
+#&gt;      0     0    7.59864    0   25    4.99762    7.59864  52.0%     -    1s
+#&gt;      0     2    7.59864    0   25    4.99762    7.59864  52.0%     -    4s
+#&gt; *    5     3               3       5.9976170    6.61732  10.3%   107    4s
 #&gt; 
 #&gt; Cutting planes:
 #&gt;   Cover: 1
 #&gt;   MIR: 14
 #&gt; 
-#&gt; Explored 8 nodes (1023 simplex iterations) in 7.07 seconds
+#&gt; Explored 9 nodes (1353 simplex iterations) in 4.40 seconds
 #&gt; Thread count was 2 (of 2 available processors)
 #&gt; 
 #&gt; Optimal solution found (tolerance 1.00e-03)
-#&gt; Best objective 6.000000000000e+00, best bound 6.000000000000e+00, gap 0.0%</div><div class='input'><span class='fu'><a href='plot_selection.html'>plot_selection</a></span>(<span class='no'>cost</span>, <span class='no'>mc_results</span>$<span class='no'>x</span>)</div><img src='prioritize-14.png' alt='' width='540' height='400' /></pre>
+#&gt; Best objective 5.997616965943e+00, best bound 5.997616965943e+00, gap 0.0%</div><div class='input'><span class='fu'><a href='plot_selection.html'>plot_selection</a></span>(<span class='no'>cost</span>, <span class='no'>mtc_results</span>$<span class='no'>x</span>)</div><img src='prioritize-14.png' alt='' width='540' height='400' /></pre>
   </div>
   <div class="col-md-3 hidden-xs hidden-sm" id="sidebar">
     <h2>Contents</h2>

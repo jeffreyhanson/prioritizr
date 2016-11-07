@@ -172,12 +172,12 @@
 #' # prepare maximum target coverage prioritization model
 #' # set budget to 25% of total cost
 #' b_25 <- 0.25 * raster::cellStats(cost, "sum")
-#' mc_model <- maxtargets_model(x = cost, features = f, budget = b_25,
+#' mtc_model <- maxtargets_model(x = cost, features = f, budget = b_25,
 #'                             targets = 0.5)
 #' # solve to within 1 percent of optimality
 #' # pick solver automatically (uses Gurobi if installed)
-#' mc_results <- prioritize(mc_model, gap = 0.001)
-#' plot_selection(cost, mc_results$x)
+#' mtc_results <- prioritize(mtc_model, gap = 0.001)
+#' plot_selection(cost, mtc_results$x)
 prioritize <- function(pm,
                        solver = c("best", "gurobi", "symphony", "glpk"),
                        gap = 1e-4,

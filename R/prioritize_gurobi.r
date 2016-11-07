@@ -216,7 +216,9 @@ prioritize_gurobi.maxtargets_model <- function(
   # binary decision variables
   model$vtype <- "B"
   # objective function
-  model$obj <- c(rep(0, length(pm$cost)), rep(1, length(pm$targets)))
+  obj <- c(-0.01 * pm$cost / sum(pm$cost, na.rm = TRUE),
+           rep(1, length(pm$targets)))
+  model$obj <- obj
   # constraints
   model$A <- rbind(
     cbind(pm$rij, slam::simple_triplet_diag_matrix(v = -pm$targets)),
@@ -270,7 +272,7 @@ prioritize_gurobi.maxtargets_model <- function(
     bound <- results$objbound
   }
 
-  # remove indicator variabes
+  # remove indicator variables
   results$x <- results$x[seq_len(n_pu)]
 
   # if some planning units were excluded, convert back to full set

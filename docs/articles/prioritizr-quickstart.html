@@ -41,7 +41,7 @@
       <h1>Getting Started with <code>prioritizr</code></h1>
                         <h4 class="author">Matt Strimas-Mackey</h4>
             
-            <h4 class="date">2016-11-06</h4>
+            <h4 class="date">2016-11-07</h4>
           </div>
 
     
@@ -53,7 +53,7 @@
 <p>This package consists largely of two layers of functions: those that define a reserve design problem and those that solve a reserve design problem using any one of a variety of solvers. The details of the solvers are intentionally abstracted away so that the user requires minimal knowledge of the specific solvers or ILP in general.</p>
 <p>The currently supported solvers are as follows. Each must be installed separately from this package to be accessible.</p>
 <ul><li><a href="http://gurobi.com">Gurobi</a> is a state-of-the-art commercial optimization software with an R package interface. It is by far the fastest of the solvers available in this package, however, it is also the only one that isn&rsquo;t free. That said, free academic licenses are available.</li>
-<li><a href="https://projects.coin-or.org/SYMPHONY">SYMPHONY</a> is an open-source integer programming solver that is part of the Computational Infrastructure for Operations Research (COIN-OR) project, an initiative to promote development of open-source tools for operations research (a field that includes linear programming). Two R packages exist to provide interfaces to SYMPHONY: <code>Rsymphony</code> (on CRAN) and <code>lpsymphony</code> (on Bioconductor). On Windows and Mac,  may be easier to install.</li>
+<li><a href="https://projects.coin-or.org/SYMPHONY">SYMPHONY</a> is an open-source integer programming solver that is part of the Computational Infrastructure for Operations Research (COIN-OR) project, an initiative to promote development of open-source tools for operations research (a field that includes linear programming). Two R packages exist to provide interfaces to SYMPHONY: <code>Rsymphony</code> (on CRAN) and <code>lpsymphony</code> (on Bioconductor). On Windows and Mac, <code>lpsymphony</code> may be easier to install.</li>
 <li>The GNU Linear Programming Kit (<a href="https://www.gnu.org/software/glpk/">GLPK</a>) is an open-source package for solving linear and integer linear programs. The R package glpkAPI provides an interface to the low-level GLPK API.</li>
 </ul><p>This vignette is a simple, quickstart guide, for full details on this package, consult the complete vignette with <code><a href="../articles/prioritizr-full.html">vignette("prioritizr-full")</a></code>. What follows are some simple example of how this package can be used to solve conservation prioritization problems.</p>
 <div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r"><span class="kw">library</span>(prioritizr)
@@ -137,7 +137,7 @@ mc_results$objval
 <span class="co">#&gt; [1] 5667</span>
 <span class="co"># maximum target coverage objective</span>
 mtc_results$objval
-<span class="co">#&gt; [1] 4</span></code></pre></div>
+<span class="co">#&gt; [1] 3.998998</span></code></pre></div>
 </div>
 </div>
   </div>

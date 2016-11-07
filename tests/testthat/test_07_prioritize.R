@@ -51,7 +51,7 @@ run_maxtargets_tests <- function(solver='best') {
   # generate result
   sol <- prioritize(prb, solver=solver)
   # tests
-  expect_equal(sol$objval, 2) # correct amount held
+  expect_equal(round(sol$objval), 2) # correct amount held
   expect_equal(sol$x, c(0,1,1,NA)) # correct solution
 }
 
