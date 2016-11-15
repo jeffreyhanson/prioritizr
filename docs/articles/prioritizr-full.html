@@ -39,9 +39,7 @@
   <div class="col-md-9">
     <div class="page-header toc-ignore">
       <h1>Conservation Prioritization with Integer Programming in R</h1>
-                        <h4 class="author">Matt Strimas-Mackey</h4>
             
-            <h4 class="date">2016-11-15</h4>
           </div>
 
     
@@ -199,9 +197,15 @@ mc_model &lt;-<span class="st"> </span><span class="kw"><a href="../reference/ma
 <div id="maximum-target-coverage-problem" class="section level3">
 <h3 class="hasAnchor"><html><body><a href="#maximum-target-coverage-problem" class="anchor"> </a></body></html>Maximum target coverage problem</h3>
 <p>The maximum target coverage problem is a hybrid between the prior two problem types in that it allows for both a budget and targets to be set. This problem finds the set of planning units that meets representation targets for the most species while staying within a fixed budget. If multiple solutions can meet all targets while staying within budget, the cheapest solution is chosen. The maximum target coverage problem can be stated mathematically, for <span class="math inline">\(n\)</span> planning units and <span class="math inline">\(m\)</span> conservation features, as:</p>
-<p>$$  -a<em>{i=1}^{n} x_i c_i + </em>{j=1}^{m}y_j</p>
 <p><span class="math display">\[
-\]</span> <em>{i=1}^{n}x_i c_i B  </em>{j=1}^{n} x_j r_{ij} y_iT_i i $$</p>
+\text{Maximize} \space -a\sum_{i=1}^{n} x_i c_i + \sum_{j=1}^{m}y_j
+\]</span></p>
+<p>Subject to:</p>
+<p><span class="math display">\[
+\sum_{i=1}^{n}x_i c_i \leq B \space \text{and} \space 
+\sum_{j=1}^{n} x_j r_{ij}
+\geq y_iT_i \space \forall \space i 
+\]</span></p>
 <p>where <span class="math inline">\(x_i\)</span> is a binary decision variable specifying whether planning unit <span class="math inline">\(i\)</span> has been selected (1) or not (0), <span class="math inline">\(y_i\)</span> is a binary decision variable specifying whether the target for species <span class="math inline">\(i\)</span> should be met, <span class="math inline">\(c_i\)</span> is the cost of planning unit <span class="math inline">\(i\)</span>, <span class="math inline">\(r_{ij}\)</span> is the representation level of feature <span class="math inline">\(i\)</span> in planning unit <span class="math inline">\(j\)</span>, <span class="math inline">\(B\)</span> is the budget, and <span class="math inline">\(T_i\)</span> is the target for feature <span class="math inline">\(i\)</span>. Finally, the factor <span class="math inline">\(a\)</span> is chosen so that the first term of the objective function is much smaller than the second. This ensures that the reserve cost only plays a role in distinguishing between solutions that meet the same number of targets.</p>
 <p>To specify a prioritization model of this type use the <code><a href="../reference/maxtargets_model.html">maxtargets_model()</a></code> function to create a <code>maxtargets_model</code> S3 object. Here we set the budget to 5% of the total cost of the study area and choose targets such that 50% of each species&rsquo; existing range will be protected.</p>
 <div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r">b_5 &lt;-<span class="st"> </span><span class="fl">0.05</span> *<span class="st"> </span>raster::<span class="kw">cellStats</span>(cost, <span class="st">"sum"</span>)
@@ -229,7 +233,7 @@ mtc_model &lt;-<span class="st"> </span><span class="kw"><a href="../reference/m
 <span class="co">#&gt;  $ objval  : num 985394</span>
 <span class="co">#&gt;  $ objbound: num 985394</span>
 <span class="co">#&gt;  $ gap     : num 0</span>
-<span class="co">#&gt;  $ time    : num 0.074</span>
+<span class="co">#&gt;  $ time    : num 0.075</span>
 <span class="co">#&gt;  - attr(*, "class")= chr "prioritizr_results"</span></code></pre></div>
 <div id="alternative-solvers" class="section level3">
 <h3 class="hasAnchor"><html><body><a href="#alternative-solvers" class="anchor"> </a></body></html>Alternative solvers</h3>
@@ -256,22 +260,23 @@ mtc_model &lt;-<span class="st"> </span><span class="kw"><a href="../reference/m
 <p>Note that to ensure <code><a href="../reference/prioritize.html">prioritize()</a></code> returns in a reasonable amount of time, the default stopping condition is <code>gap = 0.0001</code>. To override this and return the exact optimal solution, use the following, however, note that this may take significantly longer:</p>
 <div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r">msc_results_exact &lt;-<span class="st"> </span><span class="kw"><a href="../reference/prioritize.html">prioritize</a></span>(msc_model, <span class="dt">gap =</span> <span class="dv">0</span>)</code></pre></div>
 </div>
-<div id="analyzing-results" class="section level3">
-<h3 class="hasAnchor"><html><body><a href="#analyzing-results" class="anchor"> </a></body></html>Analyzing results</h3>
+</div>
+<div id="inspecting-the-results" class="section level2">
+<h2 class="hasAnchor"><html><body><a href="#inspecting-the-results" class="anchor"> </a></body></html>Inspecting the results</h2>
 <p>The resulting solutions can be displayed by passing the planning units and solution vector to <code><a href="../reference/plot_selection.html">plot_selection()</a></code>:</p>
 <div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r"><span class="kw"><a href="../reference/plot_selection.html">plot_selection</a></span>(cost, msc_results$x, <span class="dt">title =</span> <span class="st">"Minimum Set Cover"</span>)</code></pre></div>
 <p><img src="figures/full_solutions-1.png" width="672" style="display: block; margin: auto;"></p>
 <p>The cost of a given solution can easily be calculated with:</p>
 <div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r"><span class="kw">sum</span>(mc_results$x[mc_model$included] *<span class="st"> </span>mc_model$cost)
 <span class="co">#&gt; [1] 2458660</span></code></pre></div>
-<p>To calculate the representation level for each feature and check if the targets were met using matrix multiplication:</p>
+<p>To calculate the representation level for each feature, and check if the targets were met, use matrix multiplication:</p>
 <div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r">rep_lev &lt;-<span class="st">  </span>(<span class="kw">as.matrix</span>(mtc_model$rij) %*%<span class="st"> </span>mtc_results$x[mtc_model$included])[, <span class="dv">1</span>]
 rep_lev
 <span class="co">#&gt; [1] 500 268  24 136</span>
 <span class="co"># targets met?</span>
 rep_lev &gt;=<span class="st"> </span>mtc_model$targets
 <span class="co">#&gt; [1]  TRUE FALSE FALSE FALSE</span></code></pre></div>
-<p>Alternatively, these values can be calculated using the <code>summary()</code> function:</p>
+<p>Alternatively, these values can be calculated using the <code><a href="../reference/solution_summary.html">solution_summary()</a></code> function:</p>
 <div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r"><span class="kw"><a href="../reference/solution_summary.html">solution_summary</a></span>(mtc_model, mtc_results)
 <span class="co">#&gt; $n_pu</span>
 <span class="co">#&gt; [1] 500</span>
@@ -303,8 +308,7 @@ cost_target &lt;-<span class="st"> </span><span class="kw">data.frame</span>(cos
 <span class="st">  </span><span class="kw">labs</span>(<span class="dt">x =</span> <span class="st">"Cost (millions)"</span>, <span class="dt">y =</span> <span class="st">"# Targets Met"</span>,
        <span class="dt">title =</span> <span class="st">"More targets met as budget increases"</span>)</code></pre></div>
 <p><img src="figures/full_budget-targets-1.png" width="672" style="display: block; margin: auto;"></p>
-<p>So, in a maximum target coverage model, as the budget increases the number of targets met will increase accordingly.</p>
-</div>
+<p>So, in a maximum target coverage model, as the budget increases the number of targets met will increase accordingly. Remember that if there are multiple solutions that meet all the targets the chosen solution will be the one that also has the lowest cost.</p>
 </div>
 </div>
 </div>
@@ -320,6 +324,7 @@ cost_target &lt;-<span class="st"> </span><span class="kw">data.frame</span>(cos
       <li><a href="#using-prioritizr">Using <code>prioritizr</code></a><ul class="nav nav-pills nav-stacked"><li><a href="#data-generation">Data generation</a></li>
       <li><a href="#problem-specification">Problem specification</a></li>
       <li><a href="#solving-prioritization-problems">Solving prioritization problems</a></li>
+      <li><a href="#inspecting-the-results">Inspecting the results</a></li>
       </ul></li>
       </ul></div>
       </div>

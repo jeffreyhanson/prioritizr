@@ -1,7 +1,5 @@
 ---
 title: "Conservation Prioritization with Integer Programming in R"
-author: "Matt Strimas-Mackey"
-date: "2016-11-15"
 output:
   html_document:
     toc: true
@@ -282,7 +280,7 @@ str(msc_results)
 #>  $ objval  : num 985394
 #>  $ objbound: num 985394
 #>  $ gap     : num 0
-#>  $ time    : num 0.073
+#>  $ time    : num 0.08
 #>  - attr(*, "class")= chr "prioritizr_results"
 ```
 

@@ -1,7 +1,5 @@
 ---
 title: "Getting Started with `prioritizr`"
-author: "Matt Strimas-Mackey"
-date: "2016-11-15"
 output:
   html_document:
     toc: true

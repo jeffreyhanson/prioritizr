@@ -1,7 +1,5 @@
 ---
 title: "Conservation Prioritization with Integer Programming in R"
-author: "Matt Strimas-Mackey"
-date: "`r Sys.Date()`"
 output:
   html_document:
     toc: true
