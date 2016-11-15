@@ -41,7 +41,7 @@
       <h1>Getting Started with <code>prioritizr</code></h1>
                         <h4 class="author">Matt Strimas-Mackey</h4>
             
-            <h4 class="date">2016-11-07</h4>
+            <h4 class="date">2016-11-15</h4>
           </div>
 
     
@@ -115,7 +115,7 @@ mtc_model &lt;-<span class="st"> </span><span class="kw"><a href="../reference/m
 </div>
 <div id="solving-prioritization-problems" class="section level1">
 <h1 class="hasAnchor"><html><body><a href="#solving-prioritization-problems" class="anchor"> </a></body></html>Solving prioritization problems</h1>
-<p>The function <code><a href="../reference/prioritize.html">prioritize()</a></code> offers a unified interface to solving either type of prioritization problem using any of the available solvers. To solve the minimum set cover problem to within 0.1% of optimality use:</p>
+<p>The function <code><a href="../reference/prioritize.html">prioritize()</a></code> offers a unified interface to solving any of three problem types using any of the available solvers. To solve the minimum set cover problem to within 0.1% of optimality use:</p>
 <div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r">msc_results &lt;-<span class="st"> </span><span class="kw"><a href="../reference/prioritize.html">prioritize</a></span>(msc_model, <span class="dt">gap =</span> <span class="fl">0.001</span>)</code></pre></div>
 <p>By default, this function uses the best available solver, which is Gurobi if it is installed. Alternatively, the solver can be specified explicitly. For example, to solve the maximum coverage problem with SYMPHONY use:</p>
 <div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r">mc_results &lt;-<span class="st"> </span><span class="kw"><a href="../reference/prioritize.html">prioritize</a></span>(mc_model, <span class="dt">solver =</span> <span class="st">"symphony"</span>, <span class="dt">gap =</span> <span class="fl">0.001</span>)</code></pre></div>

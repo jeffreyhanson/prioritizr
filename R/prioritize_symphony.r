@@ -101,7 +101,7 @@ prioritize_symphony.minsetcover_model <- function(
       x = as.integer(round(x)),
       objval = results$objval,
       objbound = bound,
-      gap = (results$objval / bound - 1),
+      gap = abs(results$objval / bound - 1),
       time = summary(t)[["user"]] + t_gap
     ),
     class = "prioritizr_results"
@@ -202,7 +202,7 @@ prioritize_symphony.maxcover_model <- function(
       x = as.integer(round(x)),
       objval = results$objval,
       objbound = bound,
-      gap = (results$objval / bound - 1),
+      gap = abs(results$objval / bound - 1),
       time = summary(t)[["user"]] + t_gap
     ),
     class = "prioritizr_results"
@@ -319,7 +319,7 @@ prioritize_symphony.maxtargets_model <- function(
       x = as.integer(round(x)),
       objval = results$objval,
       objbound = bound,
-      gap = (results$objval / bound - 1),
+      gap = abs(results$objval / bound - 1),
       time = summary(t)[["user"]] + t_gap
     ),
     class = "prioritizr_results"

@@ -93,7 +93,7 @@ prioritize_gurobi.minsetcover_model <- function(
       x = as.integer(round(x)),
       objval = results$objval,
       objbound = bound,
-      gap = (results$objval / bound - 1),
+      gap = abs(results$objval / bound - 1),
       time = summary(t)[["user"]]
     ),
     class = "prioritizr_results"
@@ -184,7 +184,7 @@ prioritize_gurobi.maxcover_model <- function(
       x = as.integer(round(x)),
       objval = results$objval,
       objbound = bound,
-      gap = (results$objval / bound - 1),
+      gap = abs(results$objval / bound - 1),
       time = summary(t)[["user"]]
     ),
     class = "prioritizr_results"
@@ -218,6 +218,7 @@ prioritize_gurobi.maxtargets_model <- function(
   # objective function
   obj <- c(-0.01 * pm$cost / sum(pm$cost, na.rm = TRUE),
            rep(1, length(pm$targets)))
+  #obj <- c(rep(0, length(pm$cost)), rep(1, length(pm$targets)))
   model$obj <- obj
   # constraints
   model$A <- rbind(
@@ -288,7 +289,7 @@ prioritize_gurobi.maxtargets_model <- function(
       x = as.integer(round(x)),
       objval = results$objval,
       objbound = bound,
-      gap = (results$objval / bound - 1),
+      gap = abs(results$objval / bound - 1),
       time = summary(t)[["user"]]
     ),
     class = "prioritizr_results"

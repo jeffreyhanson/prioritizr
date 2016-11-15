@@ -99,7 +99,7 @@ prioritize_glpk.minsetcover_model <- function(
       x = as.integer(round(x)),
       objval = glpkAPI::mipObjValGLPK(model),
       objbound = bound,
-      gap = (glpkAPI::mipObjValGLPK(model) / bound - 1),
+      gap = abs(glpkAPI::mipObjValGLPK(model) / bound - 1),
       time = summary(t)[["user"]]
     ),
     class = "prioritizr_results"
@@ -199,7 +199,7 @@ prioritize_glpk.maxcover_model <- function(
       x = as.integer(round(x)),
       objval = glpkAPI::mipObjValGLPK(model),
       objbound = bound,
-      gap = (glpkAPI::mipObjValGLPK(model) / bound - 1),
+      gap = abs(glpkAPI::mipObjValGLPK(model) / bound - 1),
       time = summary(t)[["user"]]
     ),
     class = "prioritizr_results"
@@ -315,7 +315,7 @@ prioritize_glpk.maxtargets_model <- function(
       x = as.integer(round(x)),
       objval = glpkAPI::mipObjValGLPK(model),
       objbound = bound,
-      gap = (glpkAPI::mipObjValGLPK(model) / bound - 1),
+      gap = abs(glpkAPI::mipObjValGLPK(model) / bound - 1),
       time = summary(t)[["user"]]
     ),
     class = "prioritizr_results"

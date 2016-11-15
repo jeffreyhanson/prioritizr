@@ -21,11 +21,9 @@ This package consists largely of two layers of functions: those that define a re
 
 The currently supported solvers are as follows. Each must be installed separately from this package to be accessible.
 
-- [Gurobi](http://gurobi.com) is a state-of-the-art commercial optimization software with an R package interface. It is by far the fastest of the solvers available in this package, however, it is also the only one that isn't free. That said, free academic licenses are available.
-- [SYMPHONY](https://projects.coin-or.org/SYMPHONY) is an open-source integer programming solver that is part of the Computational Infrastructure for Operations Research (COIN-OR) project, an initiative to promote development of open-source tools for operations research (a field that includes linear programming). Two R packages exist to provide interfaces to
-SYMPHONY: `Rsymphony` (on CRAN) and `lpsymphony` (on Bioconductor). On Windows and Mac, `lpsymphony` may be easier to install.
-- The GNU Linear Programming Kit ([GLPK](https://www.gnu.org/software/glpk/)) is an open-source package for solving linear and integer linear programs. The R package
-glpkAPI provides an interface to the low-level GLPK API.
+- [Gurobi](http://gurobi.com)
+- [SYMPHONY](https://projects.coin-or.org/SYMPHONY)
+- The GNU Linear Programming Kit ([GLPK](https://www.gnu.org/software/glpk/))
 
 # Installation
 
@@ -36,9 +34,32 @@ if (packageVersion("devtools") < 1.6) {
 devtools::install_github("mstrimas/prioritizr")
 ```
 
+# Vignettes
+
+This package has two vignettes which can be consulted for further details. Consult the Quickstart Guide for a short introduction to the basic usage of `prioritizr`:
+
+```
+vignette("quickstart", package = "prioritizr"")
+```
+
+For a full tutorial detailing the complete functionality of the package consult:
+
+```
+vignette("tutorial", package = "prioritizr"")
+```
+
+Finally, the [package website](https://mstrimas.github.io/prioritizr) provides access to the vignettes in addition to documentation for all the functions.
+
+# Citation
+
+```
+Matthew Strimas-Mackey (2016). prioritizr: Systematic Conservation Prioritization in R. R
+  package version 0.1.2. https://github.com/mstrimas/prioritizr
+```
+
 # Example usage
 
-For full details on this package, consult the vignette with `browseVignettes("prioritizr")` or the [package documentation](http://mstrimas.github.io/prioritizr). What follows are some simple example of how this package can be used to solve conservation prioritization problems.
+What follows are some simple example of how this package can be used to solve conservation prioritization problems.
 
 ## Required Packages
 

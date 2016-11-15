@@ -2,6 +2,7 @@ Package: prioritizr
 Type: Package
 Title: Systematic Conservation Prioritization in R
 Version: 0.1.2
+Date: 2016-11-15
 Authors@R: person("Matthew", "Strimas-Mackey", email="mstrimas@gmail.com", role = c("aut", "cre"))
 Description: Solve systematic reserve design problems using integer programming 
     techniques.
