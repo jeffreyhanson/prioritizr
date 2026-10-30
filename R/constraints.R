@@ -43,10 +43,10 @@ NULL
 #' }
 #'
 #' \item{[add_separation_constraints()]}{
-#' Add constraints to ensure that selected planning units are not neighbors
-#' with each other. These constraints may be especially useful for
-#' ensuring that features are represented in multiple, spatially separate
-#' protected areas.
+#' Add constraints to ensure that selected planning units are separated
+#' from each other. These constraints may be especially useful for
+#' ensuring that planning units that are allocated to different zones
+#' are not neighbors, or have a minimum threshold distance between them.
 #' }
 #'
 #' \item{[add_contiguity_constraints()]}{
@@ -114,32 +114,35 @@ NULL
 #' # create problem with neighbor constraints
 #' p4 <- p1 %>% add_neighbor_constraints(2)
 #'
+#' # create problem with separation constraints
+#' p5 <- p1 %>% add_separation_constraints(2)
+#'
 #' # create problem with contiguity constraints
-#' p5 <- p1 %>% add_contiguity_constraints()
+#' p6 <- p1 %>% add_contiguity_constraints()
 #'
 #' # create problem with feature contiguity constraints
-#' p6 <- p1 %>% add_feature_contiguity_constraints()
+#' p7 <- p1 %>% add_feature_contiguity_constraints()
 #'
 #' # create problem with linear constraints to ensure that,
 #' # at least, 5 planning units in the locked in raster are selected
-#' p6 <- p1 %>% add_linear_constraints(5, ">=", sim_locked_in_raster)
+#' p8 <- p1 %>% add_linear_constraints(5, ">=", sim_locked_in_raster)
 #'
 #' # create problem with linear constraints to ensure that
 #' # the total cost of solution is greater than or equal to 10
 #' # (note that this example is fairly contrived, see the documentation for
 #' # this function for a more realistic example)
-#' p7 <- p1 %>% add_cost_constraints(10, ">=")
+#' p9 <- p1 %>% add_cost_constraints(10, ">=")
 #'
 #' # solve problems
-#' s <- terra::rast(lapply(list(p1, p2, p3, p4, p5, p6, p6, p7), solve))
+#' s <- terra::rast(lapply(list(p1, p2, p3, p4, p5, p6, p6, p7, p8, p9), solve))
 #' names(s) <- c(
 #'   "minimal problem", "locked in", "locked out",
-#'   "neighbor", "contiguity", "feature contiguity",
-#'   "linear constraints", "cost constraints"
+#'   "neighbor", "separation", "contiguity",
+#'   "feature contiguity", "linear constraints", "cost constraints"
 #' )
 #'
 #' # plot solutions
-#' plot(s, axes = FALSE, nr = 2)
+#' plot(s, axes = FALSE, nr = 3)
 #'
 #' @name constraints
 NULL

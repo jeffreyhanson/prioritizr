@@ -1,6 +1,7 @@
 test_that("compile (sf, single zone)", {
   # import data
   sim_pu_polygons <- get_sim_pu_polygons()[c(1:2, 10:12, 20:22), ]
+  sim_pu_polygons$i <- seq_len(nrow(sim_pu_polygons))
   sim_features <- get_sim_features()
   # create problem
   p <-
@@ -65,22 +66,23 @@ test_that("solve (sf, single zone)", {
   # import data
   sim_pu_polygons <- get_sim_pu_polygons()
   sim_features <- get_sim_features()
+  # define adjacency matrix
+  adj_matrix <- adjacency_matrix(sim_pu_polygons)
   # create problem
   p <-
     problem(sim_pu_polygons, sim_features, "cost") %>%
     add_min_set_objective() %>%
     add_relative_targets(0.1) %>%
-    add_separation_constraints() %>%
+    add_separation_constraints(data = adj_matrix) %>%
     add_binary_decisions() %>%
-    add_default_solver(gap = 0, verbose = FALSE)
+    add_default_solver(gap = 0.1, verbose = FALSE)
   # solve problem
   s <- solve(p)
   # calculations for tests
   sel <- which(s$solution_1 > 0.5)
-  a <- as.matrix(adjacency_matrix(sim_pu_polygons))
   # tests
   expect_gt(length(sel), 0)
-  expect_equal(sum(a[sel, sel]), 0)
+  expect_equal(sum(adj_matrix[sel, sel]), 0)
 })
 
 test_that("solve (locked in neighbors, single zone)", {
@@ -100,7 +102,10 @@ test_that("solve (locked in neighbors, single zone)", {
     add_binary_decisions() %>%
     add_default_solver(verbose = FALSE)
   # tests
-  expect_error(solve(p, force = TRUE, run_checks = FALSE), "impossible")
+  expect_error(
+    solve(p, force = TRUE, run_checks = FALSE),
+    "impossible"
+  )
 })
 
 test_that("invalid input (single zone)", {
@@ -182,37 +187,47 @@ test_that("solve (SpatRaster, multiple zones, replication)", {
   # import data
   sim_pu_raster <- get_sim_pu_raster()
   sim_features <- get_sim_features()[[1:2]]
-  # create problem with a zone for each replicate
+  # prepare data for problem
   n_r <- 3
-  z <- zones(
-    "r1" = sim_features, "r2" = sim_features, "r3" = sim_features,
-    feature_names = names(sim_features)
+  n_f <- terra::nlyr(sim_features)
+  fts <- do.call(
+    zones,
+    append(
+      stats::setNames(
+        list(sim_features)[rep(1, n_r)],
+        nm = paste0("r", seq_len(n_r))
+      ),
+      list(feature_names = names(sim_features))
+    )
   )
-  sep <- matrix(1, nrow = n_r, ncol = n_r)
-  diag(sep) <- 0
+  pu <- sim_pu_raster[[rep(1, n_r)]]
+  names(pu) <- paste0("r", seq_len(n_r))
+  z2 <- matrix(1, nrow = n_r, ncol = n_r)
+  diag(z2) <- 0
+  # create problem
   p <-
-    problem(c(sim_pu_raster, sim_pu_raster, sim_pu_raster), z) %>%
+    problem(pu, fts) %>%
     add_min_set_objective() %>%
-    add_relative_targets(matrix(0.05, nrow = 2, ncol = n_r)) %>%
-    add_separation_constraints(zones = sep) %>%
+    add_absolute_targets(matrix(1, nrow = n_f, ncol = n_r)) %>%
+    add_separation_constraints(
+      zones = z2,
+      data = adjacency_matrix(pu[[1]], directions = 8)
+    ) %>%
     add_binary_decisions() %>%
     add_default_solver(verbose = FALSE)
   # solve problem
   s <- solve(p)
   # calculations for tests
-  m <- terra::as.matrix(category_layer(s), wide = TRUE)
-  m[is.na(m)] <- 0
-  touching <- 0
-  for (i in seq_len(nrow(m))) {
-    for (j in seq_len(ncol(m))) {
-      if (m[i, j] == 0) next
-      if (i < nrow(m) && m[i + 1, j] > 0 && m[i + 1, j] != m[i, j])
-        touching <- touching + 1
-      if (j < ncol(m) && m[i, j + 1] > 0 && m[i, j + 1] != m[i, j])
-        touching <- touching + 1
-    }
-  }
+  ## assign each planning unit to replicate id
+  rep_ids <- category_layer(s)
+  rep_ids[rep_ids < 1] <- NA_real_
+  ## assign each planning unit to a patch id, where neighboring planning
+  ## units get the same patch id
+  patch_ids <- terra::patches(terra::as.int(rep_ids), directions = 8)
+  ## calculate zonal statistics for each patch id, so we can see
+  ## if the a single patch contains multiple different replicate identifiers
+  result_min <- terra::zonal(rep_ids, z = patch_ids, "min")
+  result_max <- terra::zonal(rep_ids, z = patch_ids, "max")
   # tests
-  expect_equal(touching, 0)
-  expect_true(all(sort(unique(c(m[m > 0]))) == seq_len(n_r)))
+  expect_equal(result_min[[2]], result_max[[2]])
 })

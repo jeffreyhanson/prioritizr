@@ -4,10 +4,10 @@ NULL
 #' Add separation constraints
 #'
 #' Add constraints to a conservation planning problem to ensure
-#' that selected planning units are not neighbors with each other.
+#' that selected planning units are separated from each other.
 #' If the problem has multiple zones, then these constraints can
 #' instead be used to ensure that planning units allocated to different
-#' zones are not neighbors with each other.
+#' zones are separated from each other.
 #'
 #' @inheritParams add_manual_locked_constraints
 #'
@@ -24,38 +24,14 @@ NULL
 #' that neighboring planning units cannot both be allocated to the same zone.
 #'
 #' @param data `NULL`, `matrix`, `Matrix`, `data.frame`, or
-#' `array` object showing which planning units are neighbors with each
-#' other. Defaults to `NULL` such that the
-#' neighborhood data are calculated automatically using the
-#' [adjacency_matrix()] function.
+#' `array` object showing which planning units should be separated from
+#' each other. For example, [adjacency_matrix()] can be used to separate
+#' planning units from their immediate neighbors.
+#' Alternatively, [proximity_matrix()] can be used to separate planning units
+#' based on a distance threshold.
+#' Defaults to `NULL` such that planning units are automatically separated
+#' based on the [adjacency_matrix()] function.
 #' See the Data format section for more information.
-#'
-#' @details
-#' This function uses neighborhood data to add constraints so that
-#' neighboring planning units are not selected in the solution
-#' (or, if the problem has multiple zones, not allocated to particular
-#' combinations of zones).
-#' Specifically, if planning units \eqn{i} and \eqn{j} are neighbors
-#' and \eqn{Z_{rs} = 1} (per `zones`), then the following constraint
-#' is added:
-#' \deqn{x_{ir} + \sum_{s \in S_r} x_{js} \leq 1}{
-#' x_ir + sum_{s in S_r} x_js <= 1}
-#' where \eqn{x_{ir}} is the decision variable for allocating planning unit
-#' \eqn{i} to zone \eqn{r}, and \eqn{S_r} is the set of zones
-#' \eqn{s} where \eqn{Z_{rs} = 1}.
-#'
-#' These constraints can be used to ensure that features are represented
-#' in multiple, spatially separate protected areas (i.e., replication).
-#' To achieve this, a problem can be formulated with a zone for
-#' each replicate, targets for each feature in each zone, and
-#' separation constraints with `zones` set to a matrix with ones
-#' along the off-diagonal and zeros along the diagonal. This means that
-#' planning units allocated to the same zone can be neighbors with each
-#' other, but planning units allocated to different zones cannot.
-#' As such, each group of connected planning units in the solution
-#' (i.e., each protected area) will only contain planning units allocated
-#' to a single zone, and so each feature will be represented in at least
-#' as many separate protected areas as there are zones.
 #'
 #' @inheritSection add_neighbor_constraints Data format
 #'
@@ -76,8 +52,8 @@ NULL
 #'   add_binary_decisions() %>%
 #'   add_default_solver(verbose = FALSE)
 #'
-#' # create problem with constraints so that no two selected
-#' # planning units are neighbors
+#' # create problem with constraints so that none of the selected
+#' # planning units are neighbors with each other
 #' p2 <- p1 %>% add_separation_constraints()
 #'
 #' # solve problems
@@ -87,24 +63,38 @@ NULL
 #' # plot solutions
 #' plot(s1, axes = FALSE)
 #'
-#' # create problem so that each feature is represented in at least
-#' # three spatially separate protected areas, using a zone for each
-#' # replicate
-#' n_replicates <- 3
+#' # create problem so that each feature is represented in at least three
+#' # spatially separate protected areas, using a zone for each replicate
+#'
+#' # prepare feature data for zones,
+#' # here we define three zones called r1, r2, and r3, and each zone has
+#' # a copy of the same feature data
 #' z <- zones(
 #'   "r1" = sim_features, "r2" = sim_features, "r3" = sim_features,
 #'   feature_names = names(sim_features)
 #' )
-#' sep <- matrix(1, nrow = n_replicates, ncol = n_replicates)
-#' diag(sep) <- 0
-#' print(sep)
+#'
+#' # prepare zones,
+#' # here we create a matrix that a value of 1 on non-diagonal elements and
+#' # zones on diagonal elements of the matrix to specify that the separation
+#' # constraints should be applied to planning units when they are allocated to
+#' # different zones
+#' zones_matrix <- matrix(1, nrow = 3, ncol = 3)
+#' diag(zones_matrix) <- 0
+#' print(zones_matrix)
+#'
+#' # create problem,
+#' # here we specify that each zone has same cost values, targets so that each
+#' # feature should be represented at least once in each and every zone, and
+#' # separation constraints to prevent planning units that are allocated to
+#' # different zones from being neighbors
 #' p3 <-
 #'   problem(c(sim_pu_raster, sim_pu_raster, sim_pu_raster), z) %>%
 #'   add_min_set_objective() %>%
-#'   add_relative_targets(
-#'     matrix(0.05, nrow = terra::nlyr(sim_features), ncol = n_replicates)
+#'   add_absolute_targets(
+#'     matrix(1, nrow = terra::nlyr(sim_features), ncol = 3)
 #'   ) %>%
-#'   add_separation_constraints(zones = sep) %>%
+#'   add_separation_constraints(zones = zones_matrix) %>%
 #'   add_binary_decisions() %>%
 #'   add_default_solver(verbose = FALSE)
 #'
@@ -326,8 +316,17 @@ internal_add_separation_constraints <- function(x, zones, data) {
             )
             # nocov end
           }
+          # determine maximum number of neighbors for a given planning unit
+          max_n <- m[[1]][[1]] * 0
+          for (z1 in seq_len(ncol(z))) {
+            for (z2 in seq_len(nrow(z))) {
+              max_n <- max_n + m[[z1]][[z2]]
+            }
+          }
+          Matrix::diag(max_n) <- 0
+          max_n <- max(1, Matrix::rowSums(max_n))
           # apply constraints
-          rcpp_apply_separation_constraints(x$ptr, m)
+          rcpp_apply_xor_constraints(x$ptr, m, max_n)
           # return success
           invisible(TRUE)
         }

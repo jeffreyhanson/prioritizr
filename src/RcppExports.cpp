@@ -685,15 +685,17 @@ BEGIN_RCPP
     return rcpp_result_gen;
 END_RCPP
 }
-// rcpp_apply_separation_constraints
-bool rcpp_apply_separation_constraints(SEXP x, const Rcpp::List connected_data);
-RcppExport SEXP _prioritizr_rcpp_apply_separation_constraints(SEXP xSEXP, SEXP connected_dataSEXP) {
+// rcpp_apply_xor_constraints
+bool rcpp_apply_xor_constraints(SEXP x, const Rcpp::List connected_data, std::size_t max_n, bool symmetric);
+RcppExport SEXP _prioritizr_rcpp_apply_xor_constraints(SEXP xSEXP, SEXP connected_dataSEXP, SEXP max_nSEXP, SEXP symmetricSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
     Rcpp::traits::input_parameter< SEXP >::type x(xSEXP);
     Rcpp::traits::input_parameter< const Rcpp::List >::type connected_data(connected_dataSEXP);
-    rcpp_result_gen = Rcpp::wrap(rcpp_apply_separation_constraints(x, connected_data));
+    Rcpp::traits::input_parameter< std::size_t >::type max_n(max_nSEXP);
+    Rcpp::traits::input_parameter< bool >::type symmetric(symmetricSEXP);
+    rcpp_result_gen = Rcpp::wrap(rcpp_apply_xor_constraints(x, connected_data, max_n, symmetric));
     return rcpp_result_gen;
 END_RCPP
 }

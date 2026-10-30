@@ -1,13 +1,20 @@
+# prioritizr 9.0.1.2
+
+## New features
+
+- New `add_separation_constraints()` function to add constraints so that
+  selected planning units are not neighbors with each other. When used with
+  multiple zones, these constraints can ensure that features are represented in
+  multiple, spatially separate protected areas (#414). Thanks to Eleanor
+  Stewart (@\leanorstewart17) for raising an issue about this functionality
+  and Anvesha Churi (@\anveshachuri) for code contribution.
+
 # prioritizr 9.0.1.1
 
 ## Minor improvements and bug fixes
 
 - New `add_scip_solver()` function for the _SCIP_ optimization software
   (#412).
-- New `add_separation_constraints()` function to add constraints so that
-  selected planning units are not neighbors with each other. When used with
-  multiple zones, these constraints can ensure that features are represented in
-  multiple, spatially separate protected areas (#414).
 - Fix bug in `spec_rule_targets()` function that yielded incorrect targets
   when the order of the features in `data` does not match that of `features` in
   `problem()` (#415). Thanks to Ramon the creator of \@wilmund for bug report.
