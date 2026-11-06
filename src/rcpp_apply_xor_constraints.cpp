@@ -1,10 +1,13 @@
 #include "package.h"
 #include "optimization_problem.h"
 #include "functions.h"
+#include <map>
+#include <set>
+#include <array>
 
 // [[Rcpp::export]]
 bool rcpp_apply_xor_constraints(
-  SEXP x, const Rcpp::List connected_data, std::size_t max_n
+  SEXP x, const Rcpp::List connected_data
 ) {
 
   /* The following code makes the following critical assumptions
@@ -28,98 +31,74 @@ bool rcpp_apply_xor_constraints(
   std::size_t A_original_nrow = ptr->_rhs.size();
   std::size_t n_pu = ptr->_number_of_planning_units;
   std::size_t n_z = ptr->_number_of_zones;
-  std::size_t n_dv = n_pu * n_z;
 
   // convert the list of list of sparseMatrix objects to a Rcpp classes
   std::vector<std::vector<arma::sp_mat>> data;
   import_connectivity_matrix_list(connected_data, data, true);
 
-  // calculate total number of non-zero elements in data
-  std::size_t data_nonzero = 0;
-  for (std::size_t z1 = 0; z1 < ptr->_number_of_zones; ++z1)
-    for (std::size_t z2 = 0; z2 < ptr->_number_of_zones; ++z2)
-      data_nonzero += data[z1][z2].n_nonzero;
-
-  // declare variables
-  boost::unordered_map<std::size_t, std::vector<std::size_t>> conflicts;
-  conflicts.reserve(n_dv);
-  std::size_t curr_i;
-  std::size_t curr_j;
-
-  // extract data from the connected matrix
-  for (std::size_t z1 = 0; z1 < ptr->_number_of_zones; ++z1) {
-    for (std::size_t z2 = 0; z2 < ptr->_number_of_zones; ++z2) {
-      for (arma::sp_mat::const_iterator itr = data[z1][z2].begin();
-           itr != data[z1][z2].end(); ++itr) {
-        // store conflict if cell value is not zero, or not a diagonal value
-        if (!(*itr < 1.0e-15) && (itr.row() != itr.col())) {
-          // extract cell data
-          curr_i = (z1 * ptr->_number_of_planning_units) + itr.row();
-          curr_j = (z2 * ptr->_number_of_planning_units) + itr.col();
-          // store connection
-          if (conflicts.find(curr_i) != conflicts.end()) {
-            // if map already has connection for curr_i...
-            conflicts[curr_i].push_back(curr_j);
-          } else {
-            // otherwise...
-            conflicts[curr_i] = {curr_j};
-            conflicts.reserve(max_n);
-          }
+  // create a map to store each conflicts between planning unit allocation
+  // variables.
+  //
+  // for example, consider the following conflicts:
+  // (pu_i zone_a) cannot be allocated if (pu_j zone_b)
+  // (pu_i zone_a) cannot be allocated if (pu_j zone_c)
+  //
+  // this map stores these conflicts with the following structure:
+  // conflicts[{pu_i_zone_a, pu_j}] = {pu_j_zone_b, pu_j_zone_c}
+  std::map<std::array<std::size_t, 2>, std::set<std::size_t>> conflicts;
+  for (std::size_t z1 = 0; z1 < n_z; ++z1) {
+    for (std::size_t z2 = 0; z2 < n_z; ++z2) {
+      for (
+        arma::sp_mat::const_iterator itr = data[z1][z2].begin();
+        itr != data[z1][z2].end(); ++itr
+      ) {
+        // only add conflict if the cell indicates a connection with
+        // a (meaningfully) non-zero value AND the connection is between
+        // different planning units
+        if (!((*itr < 1.0e-15) && (itr.row() == itr.col()))) {
+          // store the conflict
+          conflicts[{(z1 * n_pu) + itr.row(), itr.col()}].insert(
+            (z2 * n_pu) + itr.col()
+          );
         }
       }
     }
   }
 
-  // add constraints
+  // prepare data for adding conflicts as constraints.
+  // since conflicts may store entries for multiple conflicts that
+  // describe the same relationship and the order of the planning units is
+  // simply swapped, we will process these data to retain data for building
+  // non-duplicate constraints.
+  //
+  // for example, consider the following entries in conflicts:
+  // (pu_i_zone_a) cannot be allocated if (pu_j_zone_a),
+  // (pu_j_zone_a) cannot be allocated if (pu_i_zone_a).
+  //
+  // to resolve this, constraints will contain only the following information:
+  // [(pu_i_zone_a), (pu_j_zone_a)]
+  //
+  // note that we must use std::set to ensure that only non-duplicate
+  // information is retained
+  std::set<std::set<std::size_t>> constraints;
+  std::set<std::size_t> curr_conflict;
+  for (auto itr = conflicts.begin(); itr != conflicts.end(); ++itr) {
+    curr_conflict = itr->second;
+    curr_conflict.insert(itr->first[0]);
+    constraints.insert(curr_conflict);
+  }
+
+  // add constraints to problem formulation
   std::size_t r = A_original_nrow;
-  auto itr2 = conflicts.begin();
-  bool is_sym;
-  for (auto itr = conflicts.cbegin(); itr != conflicts.cend(); ++itr) {
-    // if conflict involves just two planning
-    // unit decision variables, then it can be accounted for with the
-    // simple constraint:
-    // x + y <= 1, where x and y are two different planning units
-    if (itr->second.size() == 1) {
-      // determine if the constraint is symmetric
-      itr2 = conflicts.find(itr->second[0]);
-      is_sym =
-        (itr2 != conflicts.end()) &&
-        (itr2->second.size() == 1) &&
-        (itr2->second[0] == itr.first);
-      // if conflict is symmetric,
-      // then don't add constraint if index for x is greater than y to
-      // avoid adding constraints for x + y <= 1 and also y + x <= 1
-      if (!(is_sym && (itr->first > itr->second[0]))) {
-        ptr->_A_i.push_back(r);
-        ptr->_A_j.push_back(itr->first);
-        ptr->_A_x.push_back(1.0);
-        ptr->_A_i.push_back(r);
-        ptr->_A_j.push_back(itr->second[0]);
-        ptr->_A_x.push_back(1.0);
-        ptr->_sense.push_back("<=");
-        ptr->_rhs.push_back(1.0);
-        ptr->_row_ids.push_back("x1");
-      }
-    } else {
-      // otherwise if conflict involves multiple planning units
-      // , add in more complex constraint to account for
-      // multiple planning units:
-      // (n * x) + y1 + y2 + y3 <= n, where x is a planning unit
-      // and y1, y2, and y3 are also planning units, and
-      // none of y1, y2, or y3 should not be selected if x is selected
+  for (auto itr = constraints.cbegin(); itr != constraints.cend(); ++itr) {
+    for (auto itr2 = itr->cbegin(); itr2 != itr->cend(); ++itr2) {
       ptr->_A_i.push_back(r);
-      ptr->_A_j.push_back(itr->first);
-      ptr->_A_x.push_back(itr->second.size());
-      for (itr2 = itr->second.cbegin(); itr2 != itr->second.cend(); ++itr2) {
-        ptr->_A_i.push_back(r);
-        ptr->_A_j.push_back(*itr2);
-        ptr->_A_x.push_back(1.0);
-      }
-      ptr->_sense.push_back("<=");
-      ptr->_rhs.push_back(itr->second.size());
-      ptr->_row_ids.push_back("x2");
+      ptr->_A_j.push_back(*itr2);
+      ptr->_A_x.push_back(1.0);
     }
-    // increment row counter
+    ptr->_sense.push_back("<=");
+    ptr->_rhs.push_back(1.0);
+    ptr->_row_ids.push_back("x");
     ++r;
   }
 

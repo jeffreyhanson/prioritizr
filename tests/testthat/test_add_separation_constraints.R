@@ -21,7 +21,7 @@ test_that("compile (sf, single zone)", {
   expect_equal(o$nrow(), n_f + nrow(pairs))
   expect_equal(o$rhs()[sep_rows], rep(1, nrow(pairs)))
   expect_equal(o$sense()[sep_rows], rep("<=", nrow(pairs)))
-  expect_equal(o$row_ids()[sep_rows], rep("s", nrow(pairs)))
+  expect_equal(o$row_ids()[sep_rows], rep("x", nrow(pairs)))
   # each pair of neighbors should have exactly one constraint
   a <- as.matrix(o$A()[sep_rows, , drop = FALSE])
   expect_true(all(rowSums(a) == 2))
@@ -85,10 +85,43 @@ test_that("solve (sf, single zone)", {
   expect_equal(sum(adj_matrix[sel, sel]), 0)
 })
 
+test_that("solve (simple and cliques method are identical)", {
+  skip_on_cran()
+  skip_if_no_fast_solvers_installed()
+  # create data
+  pu_data <- terra::rast(matrix(c(0.1, 0.1, 1, 1, 1, 1), nrow = 2))
+  ft_data <- terra::rast(matrix(c(1, 1, 0, 0, 0, 1), nrow = 2))
+  locked_data <- terra::rast(matrix(c(0, 1, 0, 0, 0, 0), nrow = 2))
+  # create problems
+  p1 <-
+    problem(pu_data, ft_data) %>%
+    add_min_set_objective() %>%
+    add_absolute_targets(2) %>%
+    add_separation_constraints(method = "simple") %>%
+    add_locked_in_constraints(locked_data) %>%
+    add_binary_decisions() %>%
+    add_default_solver(verbose = FALSE)
+  p2 <-
+    problem(pu_data, ft_data) %>%
+    add_min_set_objective() %>%
+    add_absolute_targets(2) %>%
+    add_separation_constraints(method = "cliques") %>%
+    add_locked_in_constraints(locked_data) %>%
+    add_binary_decisions() %>%
+    add_default_solver(verbose = FALSE)
+  # generate solutions
+  s1 <- solve(p1, run_checks = FALSE)
+  s2 <- solve(p2, run_checks = FALSE)
+  # tests
+  y <- matrix(c(0, 1, 0, 0, 0, 1), nrow = 2)
+  expect_equal(as.matrix(s1, wide = TRUE), y)
+  expect_equal(as.matrix(s1, wide = TRUE), as.matrix(s2, wide = TRUE))
+})
+
 test_that("solve (locked in neighbors, single zone)", {
   skip_on_cran()
   skip_if_no_solvers_installed()
-  # import data
+  # create data
   pu_data <- terra::rast(matrix(c(1, 1, 1, 1, 1, 1), nrow = 2))
   locked_in <- terra::rast(matrix(c(1, 1, 0, 0, 0, 0), nrow = 2))
   ft_data <- terra::rast(matrix(c(0, 1, 0, 0, 0, 1), nrow = 2))
@@ -150,7 +183,7 @@ test_that("compile (SpatRaster, multiple zones)", {
     problem(sim_zones_pu_raster, sim_zones_features) %>%
     add_min_set_objective() %>%
     add_relative_targets(matrix(0.2, nrow = 5, ncol = 3)) %>%
-    add_separation_constraints(zones, data = adj_m)
+    add_separation_constraints(zones = zones, data = adj_m)
   # compile problem
   o <- compile(p)
   # calculations for tests
@@ -158,7 +191,7 @@ test_that("compile (SpatRaster, multiple zones)", {
   n_z <- p$number_of_zones()
   pu_ind <- p$planning_unit_indices()
   adj_m <- as.matrix(adj_m[pu_ind, pu_ind])
-  sep_rows <- which(o$row_ids() == "s")
+  sep_rows <- which(o$row_ids() == "x")
   a <- as.matrix(o$A()[sep_rows, , drop = FALSE])
   # build the correct constraints, so that for each pair of neighbors
   # i and j and each zone r, x[i, r] + sum_{s != r} x[j, s] <= 1
@@ -167,7 +200,10 @@ test_that("compile (SpatRaster, multiple zones)", {
     for (j in which(adj_m[i, ] > 0.5)) {
       if (i == j) next
       for (r in seq_len(n_z)) {
-        v <- c(((r - 1) * n_pu) + i, ((setdiff(seq_len(n_z), r) - 1) * n_pu) + j)
+        v <- c(
+          ((r - 1) * n_pu) + i,
+          ((setdiff(seq_len(n_z), r) - 1) * n_pu) + j
+        )
         correct_rows <- c(correct_rows, paste(sort(v), collapse = "_"))
       }
     }

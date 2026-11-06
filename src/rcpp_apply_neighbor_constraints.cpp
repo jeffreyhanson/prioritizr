@@ -1,6 +1,8 @@
 #include "package.h"
 #include "optimization_problem.h"
 #include "functions.h"
+#include <boost/functional/hash.hpp>
+#include <boost/unordered_set.hpp>
 
 // [[Rcpp::export]]
 bool rcpp_apply_neighbor_constraints(

@@ -1,5 +1,6 @@
 #include "package.h"
 #include "optimization_problem.h"
+#include <boost/unordered_map.hpp>
 
 // [[Rcpp::export]]
 bool rcpp_apply_boundary_penalties2(SEXP x, double penalty,

@@ -182,6 +182,7 @@ Collate:
     'add_single_portfolio.R'
     'add_top_portfolio.R'
     'add_wtd_sum_approach.R'
+    'add_xor_constraints.R'
     'adjacency_matrix.R'
     'approach_rel_tol_matrix.R'
     'approach_weights_matrix.R'

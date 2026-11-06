@@ -16,10 +16,5 @@ using namespace Rcpp;
 #include <algorithm>
 #include <math.h>
 #include <string>
-#include <array>
-#include <string>
-#include <boost/functional/hash.hpp>
-#include <boost/unordered_set.hpp>
-#include <boost/unordered_map.hpp>
 
 #endif

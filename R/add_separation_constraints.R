@@ -33,6 +33,12 @@ NULL
 #' based on the [adjacency_matrix()] function.
 #' See the Data format section for more information.
 #'
+#' @param method `character` value denoting the name of the formulation
+#' technique used to implement the constraints. Available options are `"simple"`
+#' and `"cliques"`. Defaults to `"simple"`. If you are having issues with
+#' solving problems within a reasonable period of time using
+#' `method = "simple"`, then consider trying `method = "cliques"`.
+#'
 #' @inheritSection add_neighbor_constraints Data format
 #'
 #' @inherit add_manual_locked_constraints return seealso
@@ -108,33 +114,51 @@ NULL
 #'
 #' @exportMethod add_separation_constraints
 #'
-#' @aliases add_separation_constraints,ConservationProblem,ANY,array-method add_separation_constraints,ConservationProblem,ANY,matrix-method add_separation_constraints,ConservationProblem,ANY,data.frame-method add_separation_constraints,ConservationProblem,ANY,ANY-method
+#' @aliases add_separation_constraints,ConservationProblem,ANY,ANY,array-method add_separation_constraints,ConservationProblem,ANY,ANY,matrix-method add_separation_constraints,ConservationProblem,ANY,ANY,data.frame-method add_separation_constraints,ConservationProblem,ANY,ANY,ANY-method
 NULL
 
 #' @export
 methods::setGeneric("add_separation_constraints",
-  signature = methods::signature("x", "zones", "data"),
-  function(x, zones = diag(number_of_zones(x)), data = NULL) {
+  signature = methods::signature("x", "method", "zones", "data"),
+  function(
+    x, method = "simple", zones = diag(number_of_zones(x)), data = NULL
+  ) {
     assert_required(x)
+    assert_required(method)
     assert_required(zones)
     assert_required(data)
     assert(
       is_conservation_problem(x),
+      assertthat::is.string(method),
+      assertthat::noNA(method),
+      is_match_of(method, c("simple", "cliques")),
       is_inherits(data, c("NULL", "matrix", "Matrix", "data.frame", "array"))
     )
+    if (identical(method, "cliques")) {
+      assert(
+        is_installed("igraph"),
+        msg = paste(
+          "The {.pkg igraph} package must be installed for",
+          "{.code method = \"cliques\"}."
+        )
+      )
+    }
     standardGeneric("add_separation_constraints")
   }
 )
 
 #' @name add_separation_constraints
-#' @usage \S4method{add_separation_constraints}{ConservationProblem,ANY,ANY}(x, zones, data)
+#' @usage \S4method{add_separation_constraints}{ConservationProblem,ANY,ANY,ANY}(x, method, zones, data)
 #' @rdname add_separation_constraints
 methods::setMethod("add_separation_constraints",
-  methods::signature("ConservationProblem", "ANY", "ANY"),
-  function(x, zones, data) {
+  methods::signature("ConservationProblem", "ANY", "ANY", "ANY"),
+  function(x, method, zones, data) {
     # assert valid arguments
     assert(
       is_conservation_problem(x),
+      assertthat::is.string(method),
+      assertthat::noNA(method),
+      is_match_of(method, c("simple", "cliques")),
       is_inherits(zones, c("matrix", "Matrix")),
       is_inherits(data, c("NULL", "Matrix"))
     )
@@ -162,18 +186,22 @@ methods::setMethod("add_separation_constraints",
       )
     }
     # add constraints
-    internal_add_separation_constraints(x, zones, data)
+    internal_add_separation_constraints(x, method, zones, data)
   }
 )
 
 #' @name add_separation_constraints
-#' @usage \S4method{add_separation_constraints}{ConservationProblem,ANY,data.frame}(x, zones, data)
+#' @usage \S4method{add_separation_constraints}{ConservationProblem,ANY,ANY,data.frame}(x, method, zones, data)
 #' @rdname add_separation_constraints
 methods::setMethod("add_separation_constraints",
-  methods::signature("ConservationProblem", "ANY", "data.frame"),
-  function(x, zones, data) {
+  methods::signature("ConservationProblem", "ANY", "ANY", "data.frame"),
+  function(x, method, zones, data) {
     # assert valid arguments
     assert(
+      is_conservation_problem(x),
+      assertthat::is.string(method),
+      assertthat::noNA(method),
+      is_match_of(method, c("simple", "cliques")),
       is.data.frame(data),
       assertthat::has_name(data, "id1"),
       assertthat::has_name(data, "id2"),
@@ -193,33 +221,35 @@ methods::setMethod("add_separation_constraints",
     }
     # add constraints
     add_separation_constraints(
-      x, zones, marxan_connectivity_data_to_matrix(x, data, TRUE)
+      x, method, zones, marxan_connectivity_data_to_matrix(x, data, TRUE)
     )
   }
 )
 
 #' @name add_separation_constraints
-#' @usage \S4method{add_separation_constraints}{ConservationProblem,ANY,matrix}(x, zones, data)
+#' @usage \S4method{add_separation_constraints}{ConservationProblem,ANY,ANY,matrix}(x, method, zones, data)
 #' @rdname add_separation_constraints
 methods::setMethod("add_separation_constraints",
-  methods::signature("ConservationProblem", "ANY", "matrix"),
-  function(x, zones, data) {
+  methods::signature("ConservationProblem", "ANY", "ANY", "matrix"),
+  function(x, method, zones, data) {
     # add constraints
-    add_separation_constraints(x, zones, as_Matrix(data, "dgCMatrix"))
+    add_separation_constraints(x, method, zones, as_Matrix(data, "dgCMatrix"))
   }
 )
 
 #' @name add_separation_constraints
-#' @usage \S4method{add_separation_constraints}{ConservationProblem,ANY,array}(x, zones, data)
+#' @usage \S4method{add_separation_constraints}{ConservationProblem,ANY,ANY,array}(x, method, zones, data)
 #' @rdname add_separation_constraints
 methods::setMethod("add_separation_constraints",
-  methods::signature("ConservationProblem", "ANY", "array"),
-  function(x, zones, data) {
+  methods::signature("ConservationProblem", "ANY", "ANY", "array"),
+  function(x, method, zones, data) {
     # assert arguments are valid
     assert(
       is_conservation_problem(x),
-      inherits(data, "array"),
+      assertthat::is.string(method),
+      assertthat::noNA(method),
       is.null(zones),
+      inherits(data, "array"),
       length(dim(data)) == 4,
       dim(data)[1] == x$number_of_total_units(),
       dim(data)[2] == x$number_of_total_units(),
@@ -228,16 +258,24 @@ methods::setMethod("add_separation_constraints",
       all_finite(data),
       all_binary(data)
     )
+    assert(
+      identical(method, "simple"),
+      msg = paste(
+        "{.code method = \"simple\"} must be used if {.arg data} is",
+        "an {.cls array} object."
+      )
+    )
     # add constraints
-    internal_add_separation_constraints(x, zones, data)
+    internal_add_separation_constraints(x, method, zones, data)
   }
 )
 
-internal_add_separation_constraints <- function(x, zones, data) {
+internal_add_separation_constraints <- function(x, method, zones, data) {
   # assert arguments valid
   assert(
     is_conservation_problem(x),
     is_inherits(data, c("NULL", "Matrix", "array")),
+    assertthat::is.string(method),
     .internal = TRUE
   )
   # convert zones to matrix
@@ -261,7 +299,7 @@ internal_add_separation_constraints <- function(x, zones, data) {
       inherit = Constraint,
       public = list(
         name = "separation constraints",
-        data = list(zones = zones, data = data),
+        data = list(zones = zones, data = data, method = method),
         calculate = function(x) {
           assert(is_conservation_problem(x))
           # if needed, generate adjacency matrix if null
@@ -283,50 +321,70 @@ internal_add_separation_constraints <- function(x, zones, data) {
           )
           # extract data
           d <- self$get_data("data")
+          method <- self$get_data("method")
           if (is.null(d)) {
             d <- y$get_data("adjacency")
           }
-          # prepare data
-          m <- list()
-          ind <- y$planning_unit_indices()
-          if (inherits(d, "Matrix"))  {
-            # if data is a matrix...
-            d <- d[ind, ind]
-            z <- self$get_data("zones")
-            for (z1 in seq_len(ncol(z))) {
-              m[[z1]] <- list()
-              for (z2 in seq_len(nrow(z))) {
-                m[[z1]][[z2]] <- as_Matrix(d * z[z1, z2], "dgCMatrix")
+          # apply constraints..
+          if (identical(method, "simple")) {
+            # apply constraints for simple method
+            m <- list()
+            ind <- y$planning_unit_indices()
+            if (inherits(d, "Matrix"))  {
+              # if data is a matrix...
+              d <- d[ind, ind]
+              z <- self$get_data("zones")
+              for (z1 in seq_len(ncol(z))) {
+                m[[z1]] <- list()
+                for (z2 in seq_len(nrow(z))) {
+                  m[[z1]][[z2]] <- as_Matrix(d * z[z1, z2], "dgCMatrix")
+                }
               }
+            } else if (inherits(d, "array")) {
+              ## if data is an array...
+              z <- 0
+              for (z1 in seq_len(dim(d)[3])) {
+                m[[z1]] <- list()
+                for (z2 in seq_len(dim(d)[4])) {
+                  m[[z1]][[z2]] <- as_Matrix(d[ind, ind, z1, z2], "dgCMatrix")
+                }
+              }
+            } else {
+              ## throw error if not recognized
+              # nocov start
+              cli::cli_abort(
+                "Failed calculations for {.fn add_separation_constraints}.",
+                .internal = TRUE,
+              )
+              # nocov end
             }
-          } else if (inherits(d, "array")) {
-            ## if data is an array...
-            for (z1 in seq_len(dim(d)[3])) {
-              m[[z1]] <- list()
-              for (z2 in seq_len(dim(d)[4])) {
-                m[[z1]][[z2]] <- as_Matrix(d[ind, ind, z1, z2], "dgCMatrix")
-              }
+            # apply constraints
+            if ((sum(d) + sum(z)) > 1e-15) {
+              rcpp_apply_xor_constraints(x$ptr, m)
             }
           } else {
-            ## throw error if not recognized
-            # nocov start
-            cli::cli_abort(
-              "Failed calculations for {.fn add_separation_constraints}.",
-              .internal = TRUE,
+            # apply constraints for cliques method
+            ind <- y$planning_unit_indices()
+            d <- d[ind, ind]
+            z <- self$get_data("zones")
+            pu_cl <- igraph::max_cliques(
+              igraph::graph_from_adjacency_matrix(d, mode = "undirected"),
+              min = 2
             )
-            # nocov end
-          }
-          # determine maximum number of neighbors for a given planning unit
-          max_n <- m[[1]][[1]] * 0
-          for (z1 in seq_len(ncol(z))) {
-            for (z2 in seq_len(nrow(z))) {
-              max_n <- max_n + m[[z1]][[z2]]
+            z_cl <-igraph::max_cliques(
+              igraph::graph_from_adjacency_matrix(
+                unname(z), mode = "undirected"
+              ),
+              min = 1
+            )
+
+            base::print("pu_cl")
+            base::print(length(pu_cl))
+
+            if (length(pu_cl) > 0) {
+              rcpp_apply_xor_constraints2(x$ptr, z_cl, pu_cl)
             }
           }
-          Matrix::diag(max_n) <- 0
-          max_n <- max(1, Matrix::rowSums(max_n))
-          # apply constraints
-          rcpp_apply_xor_constraints(x$ptr, m, max_n)
           # return success
           invisible(TRUE)
         }

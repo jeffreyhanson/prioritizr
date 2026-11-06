@@ -169,6 +169,7 @@ Other functions for adding constraints:
 \code{\link[=add_manual_bounded_constraints]{add_manual_bounded_constraints()}},
 \code{\link[=add_manual_locked_constraints]{add_manual_locked_constraints()}},
 \code{\link[=add_neighbor_constraints]{add_neighbor_constraints()}},
-\code{\link[=add_separation_constraints]{add_separation_constraints()}}
+\code{\link[=add_separation_constraints]{add_separation_constraints()}},
+\code{\link[=add_xor_constraints]{add_xor_constraints()}}
 }
 \concept{constraints}

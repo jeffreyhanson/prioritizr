@@ -2,22 +2,28 @@
 % Please edit documentation in R/add_separation_constraints.R
 \name{add_separation_constraints}
 \alias{add_separation_constraints}
-\alias{add_separation_constraints,ConservationProblem,ANY,array-method}
-\alias{add_separation_constraints,ConservationProblem,ANY,matrix-method}
-\alias{add_separation_constraints,ConservationProblem,ANY,data.frame-method}
-\alias{add_separation_constraints,ConservationProblem,ANY,ANY-method}
+\alias{add_separation_constraints,ConservationProblem,ANY,ANY,array-method}
+\alias{add_separation_constraints,ConservationProblem,ANY,ANY,matrix-method}
+\alias{add_separation_constraints,ConservationProblem,ANY,ANY,data.frame-method}
+\alias{add_separation_constraints,ConservationProblem,ANY,ANY,ANY-method}
 \title{Add separation constraints}
 \usage{
-\S4method{add_separation_constraints}{ConservationProblem,ANY,ANY}(x, zones, data)
+\S4method{add_separation_constraints}{ConservationProblem,ANY,ANY,ANY}(x, method, zones, data)
 
-\S4method{add_separation_constraints}{ConservationProblem,ANY,data.frame}(x, zones, data)
+\S4method{add_separation_constraints}{ConservationProblem,ANY,ANY,data.frame}(x, method, zones, data)
 
-\S4method{add_separation_constraints}{ConservationProblem,ANY,matrix}(x, zones, data)
+\S4method{add_separation_constraints}{ConservationProblem,ANY,ANY,matrix}(x, method, zones, data)
 
-\S4method{add_separation_constraints}{ConservationProblem,ANY,array}(x, zones, data)
+\S4method{add_separation_constraints}{ConservationProblem,ANY,ANY,array}(x, method, zones, data)
 }
 \arguments{
 \item{x}{\code{\link[=problem]{problem()}} object.}
+
+\item{method}{\code{character} value denoting the name of the formulation
+technique used to implement the constraints. Available options are \code{"simple"}
+and \code{"knapsack"}. Defaults to \code{"simple"}. If you are having issues with
+solving problems within a reasonable period of time using
+\code{method = "simple"}, then consider trying \code{method = "knapsack"}.}
 
 \item{zones}{\code{matrix} or \code{Matrix} object describing the
 separation scheme for different zones. Each row and column corresponds
@@ -187,6 +193,7 @@ Other functions for adding constraints:
 \code{\link[=add_mandatory_allocation_constraints]{add_mandatory_allocation_constraints()}},
 \code{\link[=add_manual_bounded_constraints]{add_manual_bounded_constraints()}},
 \code{\link[=add_manual_locked_constraints]{add_manual_locked_constraints()}},
-\code{\link[=add_neighbor_constraints]{add_neighbor_constraints()}}
+\code{\link[=add_neighbor_constraints]{add_neighbor_constraints()}},
+\code{\link[=add_xor_constraints]{add_xor_constraints()}}
 }
 \concept{constraints}

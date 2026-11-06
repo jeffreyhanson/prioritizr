@@ -213,8 +213,16 @@ rcpp_apply_neighbor_constraints <- function(x, connected_data, clamp, k, max_n) 
     .Call(`_prioritizr_rcpp_apply_neighbor_constraints`, x, connected_data, clamp, k, max_n)
 }
 
-rcpp_apply_xor_constraints <- function(x, connected_data, max_n, symmetric) {
-    .Call(`_prioritizr_rcpp_apply_xor_constraints`, x, connected_data, max_n, symmetric)
+rcpp_apply_xor_constraints <- function(x, connected_data) {
+    .Call(`_prioritizr_rcpp_apply_xor_constraints`, x, connected_data)
+}
+
+rcpp_apply_xor_constraints2 <- function(x, z_cliques, pu_cliques) {
+    .Call(`_prioritizr_rcpp_apply_xor_constraints2`, x, z_cliques, pu_cliques)
+}
+
+rcpp_apply_xor_constraints3 <- function(x, connected_data, max_n) {
+    .Call(`_prioritizr_rcpp_apply_xor_constraints3`, x, connected_data, max_n)
 }
 
 rcpp_asym_connectivity <- function(data, solution) {
