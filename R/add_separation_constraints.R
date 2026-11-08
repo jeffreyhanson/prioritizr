@@ -377,10 +377,6 @@ internal_add_separation_constraints <- function(x, method, zones, data) {
               ),
               min = 1
             )
-
-            base::print("pu_cl")
-            base::print(length(pu_cl))
-
             if (length(pu_cl) > 0) {
               rcpp_apply_xor_constraints2(x$ptr, z_cl, pu_cl)
             }
