@@ -9,7 +9,7 @@ NULL
 #' be used to ensure that planning units allocated to different
 #' zones are separated from each other.
 #'
-#' @inheritParams add_manual_locked_constraints
+#' @inheritParams add_xor_constraints
 #'
 #' @param zones `matrix` or `Matrix` object describing the
 #' separation scheme for different zones. Each row and column corresponds
@@ -108,31 +108,45 @@ NULL
 #'
 #' @exportMethod add_separation_constraints
 #'
-#' @aliases add_separation_constraints,ConservationProblem,ANY,array-method add_separation_constraints,ConservationProblem,ANY,matrix-method add_separation_constraints,ConservationProblem,ANY,data.frame-method add_separation_constraints,ConservationProblem,ANY,ANY-method
+#' @aliases add_separation_constraints,ConservationProblem,ANY,ANY,array-method add_separation_constraints,ConservationProblem,ANY,ANY,matrix-method add_separation_constraints,ConservationProblem,ANY,ANY,data.frame-method add_separation_constraints,ConservationProblem,ANY,ANY,ANY-method
 NULL
 
 #' @export
 methods::setGeneric("add_separation_constraints",
-  signature = methods::signature("x", "zones", "data"),
-  function(x, zones = diag(number_of_zones(x)), data = NULL) {
+  signature = methods::signature("x", "method", "zones", "data"),
+  function(
+    x, method = "cliques", zones = diag(number_of_zones(x)), data = NULL
+  ) {
     assert_required(x)
+    assert_required(method)
     assert_required(zones)
     assert_required(data)
     assert(
       is_conservation_problem(x),
-      is_inherits(data, c("NULL", "matrix", "Matrix", "data.frame", "array")),
-      is_installed("igraph")
+      assertthat::is.string(method),
+      assertthat::noNA(method),
+      is_match_of(method, c("cliques", "pairwise")),
+      is_inherits(data, c("NULL", "matrix", "Matrix", "data.frame", "array"))
     )
+    if (identical(method, "cliques")) {
+      assert(
+        is_installed("igraph"),
+        msg = paste(
+          "The {.pkg igraph} must be installed to use",
+          "{.code method = \"cliques\"}."
+        )
+      )
+    }
     standardGeneric("add_separation_constraints")
   }
 )
 
 #' @name add_separation_constraints
-#' @usage \S4method{add_separation_constraints}{ConservationProblem,ANY,ANY}(x, zones, data)
+#' @usage \S4method{add_separation_constraints}{ConservationProblem,ANY,ANY,ANY}(x, method, zones, data)
 #' @rdname add_separation_constraints
 methods::setMethod("add_separation_constraints",
-  methods::signature("ConservationProblem", "ANY", "ANY"),
-  function(x, zones, data) {
+  methods::signature("ConservationProblem", "ANY", "ANY", "ANY"),
+  function(x, method, zones, data) {
     # assert valid arguments
     assert(
       is_conservation_problem(x),
@@ -164,16 +178,16 @@ methods::setMethod("add_separation_constraints",
       )
     }
     # add constraints
-    internal_add_separation_constraints(x, zones, data)
+    internal_add_separation_constraints(x, method, zones, data)
   }
 )
 
 #' @name add_separation_constraints
-#' @usage \S4method{add_separation_constraints}{ConservationProblem,ANY,data.frame}(x, zones, data)
+#' @usage \S4method{add_separation_constraints}{ConservationProblem,ANY,ANY,data.frame}(x, method, zones, data)
 #' @rdname add_separation_constraints
 methods::setMethod("add_separation_constraints",
-  methods::signature("ConservationProblem", "ANY", "data.frame"),
-  function(x, zones, data) {
+  methods::signature("ConservationProblem", "ANY", "ANY", "data.frame"),
+  function(x, method, zones, data) {
     # assert valid arguments
     assert(
       is_conservation_problem(x),
@@ -196,28 +210,28 @@ methods::setMethod("add_separation_constraints",
     }
     # add constraints
     add_separation_constraints(
-      x, zones, marxan_connectivity_data_to_matrix(x, data, TRUE)
+      x, method, zones, marxan_connectivity_data_to_matrix(x, data, TRUE)
     )
   }
 )
 
 #' @name add_separation_constraints
-#' @usage \S4method{add_separation_constraints}{ConservationProblem,ANY,matrix}(x, zones, data)
+#' @usage \S4method{add_separation_constraints}{ConservationProblem,ANY,ANY,matrix}(x, method, zones, data)
 #' @rdname add_separation_constraints
 methods::setMethod("add_separation_constraints",
-  methods::signature("ConservationProblem", "ANY", "matrix"),
-  function(x, zones, data) {
+  methods::signature("ConservationProblem", "ANY", "ANY", "matrix"),
+  function(x, method, zones, data) {
     # add constraints
-    add_separation_constraints(x, zones, as_Matrix(data, "dgCMatrix"))
+    add_separation_constraints(x, method, zones, as_Matrix(data, "dgCMatrix"))
   }
 )
 
 #' @name add_separation_constraints
-#' @usage \S4method{add_separation_constraints}{ConservationProblem,ANY,array}(x, zones, data)
+#' @usage \S4method{add_separation_constraints}{ConservationProblem,ANY,ANY,array}(x, method, zones, data)
 #' @rdname add_separation_constraints
 methods::setMethod("add_separation_constraints",
-  methods::signature("ConservationProblem", "ANY", "array"),
-  function(x, zones, data) {
+  methods::signature("ConservationProblem", "ANY", "ANY", "array"),
+  function(x, method, zones, data) {
     # assert arguments are valid
     assert(
       is_conservation_problem(x),
@@ -232,14 +246,15 @@ methods::setMethod("add_separation_constraints",
       all_binary(data)
     )
     # add constraints
-    internal_add_separation_constraints(x, zones, data)
+    internal_add_separation_constraints(x, method, zones, data)
   }
 )
 
-internal_add_separation_constraints <- function(x, zones, data) {
+internal_add_separation_constraints <- function(x, method, zones, data) {
   # assert arguments valid
   assert(
     is_conservation_problem(x),
+    assertthat::is.string(method),
     is_inherits(data, c("NULL", "Matrix", "array")),
     .internal = TRUE
   )
@@ -264,7 +279,7 @@ internal_add_separation_constraints <- function(x, zones, data) {
       inherit = Constraint,
       public = list(
         name = "separation constraints",
-        data = list(zones = zones, data = data),
+        data = list(method = method, zones = zones, data = data),
         calculate = function(x) {
           assert(is_conservation_problem(x))
           # if needed, generate adjacency matrix if null
@@ -286,6 +301,7 @@ internal_add_separation_constraints <- function(x, zones, data) {
           )
           # extract data
           d <- self$get_data("data")
+          method <- self$get_data("method")
           if (is.null(d)) {
             d <- y$get_data("adjacency")
           }
@@ -323,7 +339,11 @@ internal_add_separation_constraints <- function(x, zones, data) {
             # nocov end
           }
           # apply constraints
-          internal_apply_xor_constraints(x, m)
+          if (identical(method, "cliques")) {
+            internal_apply_xor_constraints(x, m)
+          } else {
+            rcpp_apply_xor_constraints2(x$ptr, m)
+          }
           # return success
           invisible(TRUE)
         }

@@ -217,6 +217,10 @@ rcpp_apply_xor_constraints <- function(x, cliques) {
     .Call(`_prioritizr_rcpp_apply_xor_constraints`, x, cliques)
 }
 
+rcpp_apply_xor_constraints2 <- function(x, connected_data) {
+    .Call(`_prioritizr_rcpp_apply_xor_constraints2`, x, connected_data)
+}
+
 rcpp_asym_connectivity <- function(data, solution) {
     .Call(`_prioritizr_rcpp_asym_connectivity`, data, solution)
 }

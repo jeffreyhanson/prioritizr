@@ -1,4 +1,5 @@
 test_that("compile (single zone)", {
+  skip_if_not_installed("igraph")
   # create data
   pu <- terra::rast(matrix(c(1, 0.1, 1, 1)))
   ft <- terra::rast(matrix(c(1, 1, 0, 1)))
@@ -13,7 +14,7 @@ test_that("compile (single zone)", {
     problem(pu, ft) %>%
     add_min_set_objective() %>%
     add_absolute_targets(2) %>%
-    add_xor_constraints(data = m) %>%
+    add_xor_constraints(method = "cliques", data = m) %>%
     add_binary_decisions()
   # compile problem
   o <- compile(p)
@@ -30,6 +31,7 @@ test_that("compile (single zone)", {
 test_that("solve (single zone)", {
   skip_on_cran()
   skip_if_no_fast_solvers_installed()
+  skip_if_not_installed("igraph")
   # create data
   pu <- terra::rast(matrix(c(1, 0.1, 1, 1)))
   ft <- terra::rast(matrix(c(1, 1, 0, 1)))
@@ -44,7 +46,7 @@ test_that("solve (single zone)", {
     problem(pu, ft) %>%
     add_min_set_objective() %>%
     add_absolute_targets(2) %>%
-    add_xor_constraints(data = m) %>%
+    add_xor_constraints(method = "cliques", data = m) %>%
     add_binary_decisions() %>%
     add_default_solver(gap = 0, verbose = FALSE)
   # solve problem
@@ -56,6 +58,7 @@ test_that("solve (single zone)", {
 test_that("infeasibility (single zone)", {
   skip_on_cran()
   skip_if_no_solvers_installed()
+  skip_if_not_installed("igraph")
   # create data
   pu_data <- terra::rast(matrix(c(1, 1, 1, 1, 1, 1), nrow = 2))
   locked_in <- terra::rast(matrix(c(1, 1, 0, 0, 0, 0), nrow = 2))
@@ -66,7 +69,10 @@ test_that("infeasibility (single zone)", {
     add_min_set_objective() %>%
     add_absolute_targets(1) %>%
     add_locked_in_constraints(locked_in) %>%
-    add_xor_constraints(data = adjacency_matrix(pu_data)) %>%
+    add_xor_constraints(
+      method = "cliques",
+      data = adjacency_matrix(pu_data)
+    ) %>%
     add_binary_decisions() %>%
     add_default_solver(verbose = FALSE)
   # tests
@@ -77,6 +83,7 @@ test_that("infeasibility (single zone)", {
 })
 
 test_that("invalid inputs (single zone)", {
+  skip_if_not_installed("igraph")
   # import data
   sim_pu_polygons <- get_sim_pu_polygons()
   sim_features <- get_sim_features()
@@ -89,15 +96,23 @@ test_that("invalid inputs (single zone)", {
     add_binary_decisions()
   # tests
   expect_tidy_error(
-    add_xor_constraints(p, zones = matrix(2), data = adj_matrix),
+    add_xor_constraints(p, "asdf", data = adj_matrix),
+    "method"
+  )
+  expect_tidy_error(
+    add_xor_constraints(p, NA_character_, data = adj_matrix),
+    "method"
+  )
+  expect_tidy_error(
+    add_xor_constraints(p, "cliques", matrix(2), adj_matrix),
     "zones"
   )
   expect_tidy_error(
-    add_xor_constraints(p, zones = matrix(NA_real_), data = adj_matrix),
+    add_xor_constraints(p, "cliques", matrix(NA_real_), adj_matrix),
     "zones"
   )
   expect_tidy_error(
-    add_xor_constraints(p, zones = diag(2), data = adj_matrix),
+    add_xor_constraints(p, "cliques", diag(2), adj_matrix),
     "zones"
   )
   expect_tidy_error(
@@ -115,6 +130,7 @@ test_that("invalid inputs (single zone)", {
 })
 
 test_that("compile (multiple zones)", {
+  skip_if_not_installed("igraph")
   # create data
   pu <- c(
     terra::rast(matrix(c(1, 0.1, NA, 1))),
@@ -137,7 +153,7 @@ test_that("compile (multiple zones)", {
     problem(pu, ft) %>%
     add_min_set_objective() %>%
     add_absolute_targets(matrix(1, ncol = 2, nrow = 1)) %>%
-    add_xor_constraints(zones = z, data = m) %>%
+    add_xor_constraints(method = "cliques", zones = z, data = m) %>%
     add_binary_decisions()
   # compile problem
   o <- compile(p)
@@ -154,7 +170,8 @@ test_that("compile (multiple zones)", {
   expect_equal(oA[2, ], c(1, 0, 0, 0, 1, 0))
 })
 
-test_that("compile (Matrix and array are array)", {
+test_that("compile (Matrix and array are equivalent)", {
+  skip_if_not_installed("igraph")
   # create data
   pu <- c(
     terra::rast(matrix(c(1, 0.1, NA, 1))),
@@ -182,13 +199,13 @@ test_that("compile (Matrix and array are array)", {
     problem(pu, ft) %>%
     add_min_set_objective() %>%
     add_absolute_targets(matrix(1, ncol = 2, nrow = 1)) %>%
-    add_xor_constraints(zones = z, data = m) %>%
+    add_xor_constraints(method = "cliques", zones = z, data = m) %>%
     add_binary_decisions()
   p2 <-
     problem(pu, ft) %>%
     add_min_set_objective() %>%
     add_absolute_targets(matrix(1, ncol = 2, nrow = 1)) %>%
-    add_xor_constraints(zones = NULL, data = a) %>%
+    add_xor_constraints(method = "cliques", zones = NULL, data = a) %>%
     add_binary_decisions()
   # compile problems
   o1 <- compile(p1)
@@ -208,6 +225,7 @@ test_that("compile (Matrix and array are array)", {
 test_that("solve (multiple zones)", {
   skip_on_cran()
   skip_if_no_solvers_installed()
+  skip_if_not_installed("igraph")
   # create data
   pu <- c(
     terra::rast(matrix(c(1, 0.05, NA, 1))),
@@ -230,7 +248,7 @@ test_that("solve (multiple zones)", {
     problem(pu, ft) %>%
     add_min_set_objective() %>%
     add_absolute_targets(matrix(1, ncol = 2, nrow = 1)) %>%
-    add_xor_constraints(zones = z, data = m) %>%
+    add_xor_constraints(method = "cliques", zones = z, data = m) %>%
     add_binary_decisions() %>%
     add_default_solver(gap = 0, verbose = FALSE)
   # solve problem
@@ -241,6 +259,7 @@ test_that("solve (multiple zones)", {
 })
 
 test_that("invalid input (multiple zones)", {
+  skip_if_not_installed("igraph")
   # import data
   sim_zones_pu_polygons <- get_sim_zones_pu_polygons()
   sim_zones_features <- get_sim_zones_features()
@@ -257,79 +276,88 @@ test_that("invalid input (multiple zones)", {
     add_min_set_objective() %>%
     add_relative_targets(matrix(0.2, ncol = 3, nrow = 5))
   # tests
+  ## method
+  expect_tidy_error(
+    add_xor_constraints(p, "asdf", z, m),
+    "method"
+  )
+  expect_tidy_error(
+    add_xor_constraints(p, NA_character_, z, m),
+    "method"
+  )
   ## zones
   expect_tidy_error(
-    add_xor_constraints(p, z[, -1], m),
+    add_xor_constraints(p, "cliques", z[, -1], m),
     "zones"
   )
   expect_tidy_error(
-    add_xor_constraints(p, z[-1, ], m),
+    add_xor_constraints(p, "cliques", z[-1, ], m),
     "zones"
   )
   expect_tidy_error(
-    add_xor_constraints(p, z - 1, m),
+    add_xor_constraints(p, "cliques", z - 1, m),
     "zones"
   )
   expect_tidy_error(
-    add_xor_constraints(p, z + 1, m),
+    add_xor_constraints(p, "cliques", z + 1, m),
     "zones"
   )
   expect_tidy_error(
-    add_xor_constraints(p, `[<-`(z, 1, 1, NA), m),
+    add_xor_constraints(p, "cliques", `[<-`(z, 1, 1, NA), m),
     "zones"
   )
   ## data = Matrix
   expect_tidy_error(
-    add_xor_constraints(p, z, m[-1, ]),
+    add_xor_constraints(p, "cliques", z, m[-1, ]),
     "data"
   )
   expect_tidy_error(
-    add_xor_constraints(p, z, m[, -1]),
+    add_xor_constraints(p, "cliques", z, m[, -1]),
     "data"
   )
   expect_tidy_error(
-    add_xor_constraints(p, z, m + 1),
+    add_xor_constraints(p, "cliques", z, m + 1),
     "data"
   )
   expect_tidy_error(
-    add_xor_constraints(p, z, `[<-`(m, 1, 2, value = NA_real_)),
+    add_xor_constraints(p, "cliques", z, `[<-`(m, 1, 2, value = NA_real_)),
     "data"
   )
   expect_tidy_error(
-    add_xor_constraints(p, z, `[<-`(m, 1, 3, value = 1)),
+    add_xor_constraints(p, "cliques", z, `[<-`(m, 1, 3, value = 1)),
     "symmetric"
   )
   ## data = array
   expect_tidy_error(
-    add_xor_constraints(p, z, a),
+    add_xor_constraints(p, "cliques", z, a),
     "NULL"
   )
   expect_tidy_error(
-    add_xor_constraints(p, NULL, a[-1, , , ]),
+    add_xor_constraints(p, "cliques", NULL, a[-1, , , ]),
     "data"
   )
   expect_tidy_error(
-    add_xor_constraints(p, NULL, a[, -1, , ]),
+    add_xor_constraints(p, "cliques", NULL, a[, -1, , ]),
     "data"
   )
   expect_tidy_error(
-    add_xor_constraints(p, NULL, a[, , -1, ]),
+    add_xor_constraints(p, "cliques", NULL, a[, , -1, ]),
     "data"
   )
   expect_tidy_error(
-    add_xor_constraints(p, NULL, a[, , , -1]),
+    add_xor_constraints(p, "cliques", NULL, a[, , , -1]),
     "data"
   )
   expect_tidy_error(
-    add_xor_constraints(p, NULL, a + 1),
+    add_xor_constraints(p, "cliques", NULL, a + 1),
     "data"
   )
   expect_tidy_error(
-    add_xor_constraints(p, NULL, a - 2),
+    add_xor_constraints(p, "cliques", NULL, a - 2),
     "data"
   )
   expect_tidy_error(
-    add_xor_constraints(p, NULL, `[<-`(a, 1, 1, 1, 1, NA)),
+    add_xor_constraints(p, "cliques", NULL, `[<-`(a, 1, 1, 1, 1, NA)),
     "data"
   )
 })

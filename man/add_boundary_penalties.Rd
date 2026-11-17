@@ -8,11 +8,11 @@
 \alias{add_boundary_penalties,ConservationProblem,ANY,ANY,ANY,ANY,ANY-method}
 \title{Add boundary penalties}
 \usage{
-\S4method{add_boundary_penalties}{ConservationProblem,ANY,ANY,ANY,ANY,data.frame}(x, penalty, edge_factor, formulation, zones, data)
+\S4method{add_boundary_penalties}{ConservationProblem,ANY,ANY,ANY,ANY,data.frame}(x, penalty, edge_factor, method, zones, data)
 
-\S4method{add_boundary_penalties}{ConservationProblem,ANY,ANY,ANY,ANY,matrix}(x, penalty, edge_factor, formulation, zones, data)
+\S4method{add_boundary_penalties}{ConservationProblem,ANY,ANY,ANY,ANY,matrix}(x, penalty, edge_factor, method, zones, data)
 
-\S4method{add_boundary_penalties}{ConservationProblem,ANY,ANY,ANY,ANY,ANY}(x, penalty, edge_factor, formulation, zones, data)
+\S4method{add_boundary_penalties}{ConservationProblem,ANY,ANY,ANY,ANY,ANY}(x, penalty, edge_factor, method, zones, data)
 }
 \arguments{
 \item{x}{\code{\link[=problem]{problem()}} object.}
@@ -34,8 +34,8 @@ planning units. For example, an edge factor of \code{0.5} is commonly used to
 avoid overly penalizing planning units along coastlines.
 Note that \code{edge_factor} must have a value for each zone in \code{x}.}
 
-\item{formulation}{\code{character} value denoting the name of the linearization
-technique used to formulate the penalties. Available options are \code{"simple"}
+\item{method}{\code{character} value denoting the name of the linearization
+method used to formulate the penalties. Available options are \code{"simple"}
 and \code{"knapsack"}. Defaults to \code{"simple"}. If you are having issues with
 solving problems within a reasonable period of time using
 \code{formulation = "simple"}, then consider trying

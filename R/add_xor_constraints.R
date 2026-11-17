@@ -11,7 +11,14 @@ NULL
 #' to the same zone, or that one planning unit cannot be allocated to particular
 #' zone if another planning unit is also allocated to a particular zone.
 #'
-#' @inheritParams add_separation_constraints
+#' @inheritParams add_manual_locked_constraints
+#'
+#' @param method `character` value denoting the name of the formulation
+#' method. Available options include the cliques (`"cliques"`) and
+#' pairwise (`"pairwise"`) methods. Although the cliques method generally has
+#' better performance, the pairwise may have better performance for
+#' especially large or complex problems. Note that the cliques method
+#' requires installation of the \pkg{igraph} package. Defaults to `"cliques"`.
 #'
 #' @param zones `matrix` or `Matrix` object describing the
 #' separation scheme for different zones. Each row and column corresponds
@@ -80,31 +87,43 @@ NULL
 #'
 #' @exportMethod add_xor_constraints
 #'
-#' @aliases add_xor_constraints,ConservationProblem,ANY,array-method add_xor_constraints,ConservationProblem,ANY,matrix-method add_xor_constraints,ConservationProblem,ANY,data.frame-method add_xor_constraints,ConservationProblem,ANY,ANY-method
+#' @aliases add_xor_constraints,ConservationProblem,ANY,ANY,array-method add_xor_constraints,ConservationProblem,ANY,ANY,matrix-method add_xor_constraints,ConservationProblem,ANY,ANY,data.frame-method add_xor_constraints,ConservationProblem,ANY,ANY,ANY-method
 NULL
 
 #' @export
 methods::setGeneric("add_xor_constraints",
-  signature = methods::signature("x", "zones", "data"),
-  function(x, zones = diag(number_of_zones(x)), data) {
+  signature = methods::signature("x", "method", "zones", "data"),
+  function(x, method = "cliques", zones = diag(number_of_zones(x)), data) {
     assert_required(x)
+    assert_required(method)
     assert_required(zones)
     assert_required(data)
     assert(
       is_conservation_problem(x),
-      is_inherits(data, c("matrix", "Matrix", "data.frame", "array")),
-      is_installed("igraph")
+      assertthat::is.string(method),
+      assertthat::noNA(method),
+      is_match_of(method, c("cliques", "pairwise")),
+      is_inherits(data, c("matrix", "Matrix", "data.frame", "array"))
     )
+    if (identical(method, "cliques")) {
+      assert(
+        is_installed("igraph"),
+        msg = paste(
+          "The {.pkg igraph} must be installed to use",
+          "{.code method = \"cliques\"}."
+        )
+      )
+    }
     standardGeneric("add_xor_constraints")
   }
 )
 
 #' @name add_xor_constraints
-#' @usage \S4method{add_xor_constraints}{ConservationProblem,ANY,ANY}(x, zones, data)
+#' @usage \S4method{add_xor_constraints}{ConservationProblem,ANY,ANY,ANY}(x, method, zones, data)
 #' @rdname add_xor_constraints
 methods::setMethod("add_xor_constraints",
-  methods::signature("ConservationProblem", "ANY", "ANY"),
-  function(x, zones, data) {
+  methods::signature("ConservationProblem", "ANY", "ANY", "ANY"),
+  function(x, method, zones, data) {
     # assert valid arguments
     assert(
       is_conservation_problem(x),
@@ -119,16 +138,16 @@ methods::setMethod("add_xor_constraints",
       is_symmetric_matrix(data)
     )
     # add constraints
-    internal_add_xor_constraints(x, zones, data)
+    internal_add_xor_constraints(x, method, zones, data)
   }
 )
 
 #' @name add_xor_constraints
-#' @usage \S4method{add_xor_constraints}{ConservationProblem,ANY,data.frame}(x, zones, data)
+#' @usage \S4method{add_xor_constraints}{ConservationProblem,ANY,ANY,data.frame}(x, method, zones, data)
 #' @rdname add_xor_constraints
 methods::setMethod("add_xor_constraints",
-  methods::signature("ConservationProblem", "ANY", "data.frame"),
-  function(x, zones, data) {
+  methods::signature("ConservationProblem", "ANY", "ANY", "data.frame"),
+  function(x, method, zones, data) {
     # assert valid arguments
     assert(
       is_conservation_problem(x),
@@ -151,28 +170,28 @@ methods::setMethod("add_xor_constraints",
     }
     # add constraints
     add_xor_constraints(
-      x, zones, marxan_connectivity_data_to_matrix(x, data, TRUE)
+      x, method, zones, marxan_connectivity_data_to_matrix(x, data, TRUE)
     )
   }
 )
 
 #' @name add_xor_constraints
-#' @usage \S4method{add_xor_constraints}{ConservationProblem,ANY,matrix}(x, zones, data)
+#' @usage \S4method{add_xor_constraints}{ConservationProblem,ANY,ANY,matrix}(x, method, zones, data)
 #' @rdname add_xor_constraints
 methods::setMethod("add_xor_constraints",
-  methods::signature("ConservationProblem", "ANY", "matrix"),
-  function(x, zones, data) {
+  methods::signature("ConservationProblem", "ANY", "ANY", "matrix"),
+  function(x, method, zones, data) {
     # add constraints
-    add_xor_constraints(x, zones, as_Matrix(data, "dgCMatrix"))
+    add_xor_constraints(x, method, zones, as_Matrix(data, "dgCMatrix"))
   }
 )
 
 #' @name add_xor_constraints
-#' @usage \S4method{add_xor_constraints}{ConservationProblem,ANY,array}(x, zones, data)
+#' @usage \S4method{add_xor_constraints}{ConservationProblem,ANY,ANY,array}(x, method, zones, data)
 #' @rdname add_xor_constraints
 methods::setMethod("add_xor_constraints",
-  methods::signature("ConservationProblem", "ANY", "array"),
-  function(x, zones, data) {
+  methods::signature("ConservationProblem", "ANY", "ANY", "array"),
+  function(x, method, zones, data) {
     # assert arguments are valid
     assert(
       is_conservation_problem(x),
@@ -187,14 +206,15 @@ methods::setMethod("add_xor_constraints",
       all_binary(data)
     )
     # add constraints
-    internal_add_xor_constraints(x, zones, data)
+    internal_add_xor_constraints(x, method, zones, data)
   }
 )
 
-internal_add_xor_constraints <- function(x, zones, data) {
+internal_add_xor_constraints <- function(x, method, zones, data) {
   # assert arguments valid
   assert(
     is_conservation_problem(x),
+    assertthat::is.string(method),
     is_inherits(data, c("Matrix", "array")),
     .internal = TRUE
   )
@@ -219,7 +239,7 @@ internal_add_xor_constraints <- function(x, zones, data) {
       inherit = Constraint,
       public = list(
         name = "xor constraints",
-        data = list(zones = zones, data = data),
+        data = list(method = method, zones = zones, data = data),
         apply = function(x, y) {
           # assert valid arguments
           assert(
@@ -230,6 +250,7 @@ internal_add_xor_constraints <- function(x, zones, data) {
           # extract data
           d <- self$get_data("data")
           z <- self$get_data("zones")
+          method <- self$get_data("method")
           indices <- y$planning_unit_indices()
           # process data
           m <- list()
@@ -263,7 +284,11 @@ internal_add_xor_constraints <- function(x, zones, data) {
             # nocov end
           }
           # apply constraints
-          internal_apply_xor_constraints(x, m)
+          if (identical(method, "cliques")) {
+            internal_apply_xor_constraints(x, m)
+          } else {
+            rcpp_apply_xor_constraints2(x$ptr, m)
+          }
         }
       )
     )$new()
@@ -277,21 +302,42 @@ internal_apply_xor_constraints <- function(x, data) {
     is.list(data),
     internal = TRUE
   )
-  # create matrix with rows/columns for each planning unit status variable
-  ## (i.e., combination of planning unit and zone)
+  # create matrix with rows/columns for each planning unit status variable,
+  # (i.e., combination of planning unit and zone)
+  ## initialize matrix
   n_pu <- ncol(data[[1]][[1]])
   n_z <- length(data)
   m <- Matrix::sparseMatrix(
     i = 1, j = 1, x = 0, dims = rep(n_pu * n_z, 2)
   )
+  ## add in connections based on data
   for (i in seq_along(data)) {
     for (j in seq_along(data[[i]])) {
       m2 <- as_Matrix(data[[i]][[j]], "dgTMatrix")
       m3 <- matrix(
-        c(((i - 1) * n_pu) + (m2@i + 1), ((j - 1) * n_pu) + (m2@j + 1)),
+        c(
+          ((i - 1L) * n_pu) + (m2@i + 1L),
+          ((j - 1L) * n_pu) + (m2@j + 1L)
+        ),
         ncol = 2
       )
-      m[m3[, c(1, 2)]] <- m2@x
+      m[m3[, c(2, 1)]] <- m2@x
+    }
+  }
+  ## add in connections for the same planning unit allocated to different zones,
+  ## this is done to tighten formulation
+  if (n_z > 1L) {
+    for (i in seq_along(data)) {
+      for (j in seq_along(data[[i]])) {
+        m3 <- matrix(
+          c(
+            ((i - 1L) * n_pu) + seq_len(n_pu),
+            ((j - 1L) * n_pu) + seq_len(n_pu)
+          ),
+          ncol = 2
+        )
+        m[m3[, c(1, 2)]] <- 1
+      }
     }
   }
   # find cliques based on the matrix
@@ -299,6 +345,8 @@ internal_apply_xor_constraints <- function(x, data) {
     igraph::graph_from_adjacency_matrix(m, mode = "undirected", diag = FALSE),
     min = 2
   )
+  # free memory
+  rm(m, m2, m3)
   # if at least one clique present, then add constraints based on cliques
   if (length(cl) > 0) {
     rcpp_apply_xor_constraints(x$ptr, cl)

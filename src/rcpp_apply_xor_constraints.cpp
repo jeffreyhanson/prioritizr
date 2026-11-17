@@ -3,8 +3,7 @@
 #include "functions.h"
 
 // [[Rcpp::export]]
-bool rcpp_apply_xor_constraints(
-  SEXP x, const Rcpp::List cliques) {
+bool rcpp_apply_xor_constraints(SEXP x, const Rcpp::List cliques) {
 
   // initialization
   Rcpp::XPtr<OPTIMIZATIONPROBLEM> ptr = Rcpp::as<Rcpp::XPtr<OPTIMIZATIONPROBLEM>>(x);
@@ -16,7 +15,7 @@ bool rcpp_apply_xor_constraints(
   Rcpp::IntegerVector curr_clique;
   std::size_t curr_clique_size;
 
-  // add constraints
+  // add constraints based on cliques
   for (std::size_t j = 0; j < n_cliques; ++j) {
     // extract y'th zone clique
     curr_clique = cliques[j];

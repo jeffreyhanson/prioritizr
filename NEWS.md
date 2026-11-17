@@ -16,6 +16,12 @@
   Massive thanks to Anvesha Churi (\@anveshachuri) for contributing code and
   developing the underlying mathematical formulation.
 
+## Major changes
+
+- Update `add_boundary_penalies()` to rename the `formulation` parameter
+  as the `method` parameter. This change was done to provide consistent
+  with standard naming conventions in R.
+
 ## Documentation updates
 
 - Update _Publication record_ vignette.

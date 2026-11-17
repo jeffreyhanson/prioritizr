@@ -1,39 +1,40 @@
-test_that("compile (single zone)", {
+test_that("compile (sf, single zone)", {
   # import data
   sim_pu_polygons <- get_sim_pu_polygons()[c(1:2, 10:12, 20:22), ]
+  sim_pu_polygons$i <- seq_len(nrow(sim_pu_polygons))
   sim_features <- get_sim_features()
-  adj_matrix <- adjacency_matrix(sim_pu_polygons)
   # create problem
   p <-
     problem(sim_pu_polygons, sim_features, "cost") %>%
     add_min_set_objective() %>%
     add_relative_targets(0.2) %>%
-    add_separation_constraints(data = adj_matrix)
+    add_xor_constraints(
+      method = "pairwise",
+      data = adjacency_matrix(sim_pu_polygons)
+    )
   # compile problem
   o <- compile(p)
   # calculations for tests
   n_pu <- nrow(sim_pu_polygons)
   n_f <- terra::nlyr(sim_features)
-  cl <- igraph::max_cliques(
-    igraph::graph_from_adjacency_matrix(
-      adj_matrix, mode = "undirected", diag = FALSE
-    ),
-    min = 2
-  )
-  m <- Matrix::sparseMatrix(
-    i = rep(seq_along(cl), lengths(cl)),
-    j = as.integer(unlist(cl)),
-    x = 1, dims = c(length(cl), n_pu)
-  )
-  sep_rows <- seq(n_f + 1, o$nrow())
+  c_matrix <- as.matrix(adjacency_matrix(sim_pu_polygons))
+  pairs <- which(upper.tri(c_matrix) & (c_matrix > 0.5), arr.ind = TRUE)
+  sep_rows <- n_f + seq_len(nrow(pairs))
   # tests
-  expect_equal(o$rhs()[sep_rows], rep(1, length(sep_rows)))
-  expect_equal(o$sense()[sep_rows], rep("<=", length(sep_rows)))
-  expect_equal(o$row_ids()[sep_rows], rep("x", length(sep_rows)))
-  expect_equal(as.matrix(o$A()[sep_rows, ]), as.matrix(m))
+  expect_equal(o$nrow(), n_f + nrow(pairs))
+  expect_equal(o$rhs()[sep_rows], rep(1, nrow(pairs)))
+  expect_equal(o$sense()[sep_rows], rep("<=", nrow(pairs)))
+  expect_equal(o$row_ids()[sep_rows], rep("x2", nrow(pairs)))
+  # each pair of neighbors should have exactly one constraint
+  a <- as.matrix(o$A()[sep_rows, , drop = FALSE])
+  expect_true(all(rowSums(a) == 2))
+  expect_equal(
+    sort(apply(a, 1, function(x) paste(which(x > 0.5), collapse = "_"))),
+    sort(paste(pairs[, 1], pairs[, 2], sep = "_"))
+  )
 })
 
-test_that("compile (data format, single zone)", {
+test_that("compile (manually data specified, single zone)", {
   # import data
   sim_pu_polygons <- get_sim_pu_polygons()[c(1:2, 10:12, 20:22), ]
   sim_features <- get_sim_features()
@@ -46,24 +47,23 @@ test_that("compile (data format, single zone)", {
   p <-
     problem(sim_pu_polygons, sim_features, "cost") %>%
     add_min_set_objective() %>%
-    add_relative_targets(0.2) %>%
-    add_binary_decisions()
+    add_relative_targets(0.2)
   # compile problems
-  o1 <- compile(add_separation_constraints(p))
-  o2 <- compile(add_separation_constraints(p, data = a1))
-  o3 <- compile(add_separation_constraints(p, data = a2))
-  o4 <- compile(add_separation_constraints(p, data = a3))
-  o5 <- compile(add_separation_constraints(p, zones = NULL, data = a4))
+  o1 <- compile(add_xor_constraints(p, method = "pairwise", data = a1))
+  o2 <- compile(add_xor_constraints(p, method = "pairwise", data = a2))
+  o3 <- compile(add_xor_constraints(p, method = "pairwise", data = a3))
+  o4 <- compile(
+    add_xor_constraints(p, method = "pairwise", zones = NULL, data = a4)
+  )
   # test that all problems are equivalent
   expect_equal(o1$A(), o2$A())
   expect_equal(o1$A(), o3$A())
   expect_equal(o1$A(), o4$A())
-  expect_equal(o1$A(), o5$A())
-  expect_equal(o1$rhs(), o5$rhs())
-  expect_equal(o1$sense(), o5$sense())
+  expect_equal(o1$rhs(), o4$rhs())
+  expect_equal(o1$sense(), o4$sense())
 })
 
-test_that("solve (single zone)", {
+test_that("solve (sf, single zone)", {
   skip_on_cran()
   skip_if_no_fast_solvers_installed()
   # import data
@@ -76,7 +76,7 @@ test_that("solve (single zone)", {
     problem(sim_pu_polygons, sim_features, "cost") %>%
     add_min_set_objective() %>%
     add_relative_targets(0.1) %>%
-    add_separation_constraints(data = adj_matrix) %>%
+    add_xor_constraints(data = adj_matrix) %>%
     add_binary_decisions() %>%
     add_default_solver(gap = 0.1, verbose = FALSE)
   # solve problem
@@ -88,7 +88,7 @@ test_that("solve (single zone)", {
   expect_equal(sum(adj_matrix[sel, sel]), 0)
 })
 
-test_that("infeasibility (single zone)", {
+test_that("solve (locked in neighbors, single zone)", {
   skip_on_cran()
   skip_if_no_solvers_installed()
   # create data
@@ -101,7 +101,10 @@ test_that("infeasibility (single zone)", {
     add_min_set_objective() %>%
     add_absolute_targets(1) %>%
     add_locked_in_constraints(locked_in) %>%
-    add_separation_constraints() %>%
+    add_xor_constraints(
+      method = "pairwise",
+      data = adjacency_matrix(pu_data)
+    ) %>%
     add_binary_decisions() %>%
     add_default_solver(verbose = FALSE)
   # tests
@@ -119,28 +122,22 @@ test_that("invalid input (single zone)", {
   p <-
     problem(sim_pu_polygons, sim_features, "cost") %>%
     add_min_set_objective() %>%
-    add_relative_targets(0.2) %>%
-    add_binary_decisions()
+    add_relative_targets(0.2)
   # tests
   expect_tidy_error(
-    add_separation_constraints(p, zones = matrix(2)),
-    "zones"
+    add_xor_constraints(p, method = "pairwise", zones = matrix(2))
   )
   expect_tidy_error(
-    add_separation_constraints(p, zones = matrix(NA_real_)),
-    "zones"
+    add_xor_constraints(p, method = "pairwise", zones = matrix(NA_real_))
   )
   expect_tidy_error(
-    add_separation_constraints(p, zones = diag(2)),
-    "zones"
+    add_xor_constraints(p, method = "pairwise", zones = diag(2))
   )
   expect_tidy_error(
-    add_separation_constraints(p, data = "a"),
-    "data"
+    add_xor_constraints(p, method = "pairwise", data = "a")
   )
   expect_tidy_error(
-    add_separation_constraints(p, data = matrix(1, 3, 3)),
-    "data"
+    add_xor_constraints(p, method = "pairwise", data = matrix(1, 3, 3))
   )
   expect_tidy_error({
     # create problem without spatial data
@@ -152,72 +149,69 @@ test_that("invalid input (single zone)", {
       pu$cost, data.frame(id = seq_len(2), name = c("spp1", "spp2")),
       as.matrix(t(pu[, 3:4]))
     ) %>%
-    add_separation_constraints()
-  }, "spatially explicit")
+    add_xor_constraints(method = "pairwise")
+  })
 })
 
-test_that("compile (multiple zones)", {
+test_that("compile (SpatRaster, multiple zones)", {
   # import data
   sim_zones_pu_raster <- get_sim_zones_pu_raster()
   sim_zones_features <- get_sim_zones_features()
   # create data
   zones <- matrix(1, ncol = 3, nrow = 3)
   diag(zones) <- 0
-  adj_matrix <- adjacency_matrix(sim_zones_pu_raster)
+  adj_m <- adjacency_matrix(sim_zones_pu_raster)
   # create problem
   p <-
     problem(sim_zones_pu_raster, sim_zones_features) %>%
     add_min_set_objective() %>%
     add_relative_targets(matrix(0.2, nrow = 5, ncol = 3)) %>%
-    add_separation_constraints(zones = zones, data = adj_matrix) %>%
-    add_binary_decisions()
+    add_xor_constraints(method = "pairwise", zones = zones, data = adj_m)
   # compile problem
   o <- compile(p)
   # calculations for tests
   n_pu <- p$number_of_planning_units()
   n_z <- p$number_of_zones()
-  n_f <- p$number_of_features()
   pu_ind <- p$planning_unit_indices()
-  m <- Matrix::sparseMatrix(
-    i = 1, j = 1, x = 0, dims = rep(n_pu * n_z, 2)
-  )
-  for (i in seq_len(n_z)) {
-    for (j in seq_len(n_z)) {
-      m2 <- as_Matrix(adj_matrix[pu_ind, pu_ind] * zones[i, j], "dgTMatrix")
-      m3 <- matrix(
-        c(((i - 1) * n_pu) + (m2@i + 1), ((j - 1) * n_pu) + (m2@j + 1)),
-        ncol = 2
-      )
-      m[m3[, c(1, 2)]] <- m2@x
+  adj_m <- as.matrix(adj_m[pu_ind, pu_ind])
+  sep_rows <- which(o$row_ids() == "x2")
+  a <- as.matrix(o$A()[sep_rows, , drop = FALSE])
+  # build the correct constraints, so that for each pair of neighbors
+  # i and j and each zone r, x[i, r] + sum_{s != r} x[j, s] <= 1
+  correct_rows <- c()
+  for (i in seq_len(n_pu)) {
+    for (j in which(adj_m[i, ] > 0.5)) {
+      if (i == j) next
+      for (r in seq_len(n_z)) {
+        v <- c(
+          ((r - 1) * n_pu) + i,
+          ((setdiff(seq_len(n_z), r) - 1) * n_pu) + j
+        )
+        correct_rows <- c(correct_rows, paste(sort(v), collapse = "_"))
+      }
     }
   }
-  cl <- igraph::max_cliques(
-    igraph::graph_from_adjacency_matrix(m, mode = "undirected", diag = FALSE),
-    min = 2
-  )
-  m <- Matrix::sparseMatrix(
-    i = rep(seq_along(cl), lengths(cl)),
-    j = as.integer(unlist(cl)),
-    x = 1, dims = c(length(cl), n_pu * n_z)
-  )
-  sep_rows <- seq(n_pu + (n_f * n_z) + 1, o$nrow())
   # tests
   expect_equal(o$rhs()[sep_rows], rep(1, length(sep_rows)))
   expect_equal(o$sense()[sep_rows], rep("<=", length(sep_rows)))
-  expect_equal(o$A()[sep_rows, ], m)
+  expect_equal(
+    sort(apply(a, 1, function(x) paste(which(x > 0.5), collapse = "_"))),
+    sort(unique(correct_rows))
+  )
 })
 
-test_that("solve (multiple zones)", {
+test_that("solve (SpatRaster, multiple zones, replication)", {
   skip_on_cran()
   skip_if_no_fast_solvers_installed()
   # import data
   sim_pu_raster <- get_sim_pu_raster()
   sim_features <- get_sim_features()[[1:2]]
+  sim_features <- terra::crop(sim_features, sim_pu_raster)
   # prepare data for problem
   n_r <- 3
   n_f <- terra::nlyr(sim_features)
   fts <- do.call(
-    what = zones,
+    zones,
     append(
       stats::setNames(
         list(sim_features)[rep(1, n_r)],
@@ -235,7 +229,8 @@ test_that("solve (multiple zones)", {
     problem(pu, fts) %>%
     add_min_set_objective() %>%
     add_absolute_targets(matrix(1, nrow = n_f, ncol = n_r)) %>%
-    add_separation_constraints(
+    add_xor_constraints(
+      method = "pairwise",
       zones = z2,
       data = adjacency_matrix(pu[[1]], directions = 8)
     ) %>%
@@ -256,98 +251,4 @@ test_that("solve (multiple zones)", {
   result_max <- terra::zonal(rep_ids, z = patch_ids, "max")
   # tests
   expect_equal(result_min[[2]], result_max[[2]])
-})
-
-test_that("invalid input (multiple zones)", {
-  # import data
-  sim_zones_pu_polygons <- get_sim_zones_pu_polygons()
-  sim_zones_features <- get_sim_zones_features()
-  # create data
-  z <- diag(3)
-  a <- array(1, dim = c(rep(nrow(sim_zones_pu_polygons), 2), 3, 3))
-  m <- adjacency_matrix(sim_zones_pu_polygons)
-  # create problem
-  p <-
-    problem(
-      sim_zones_pu_polygons, sim_zones_features,
-      c("cost_1", "cost_2", "cost_3")
-    ) %>%
-    add_min_set_objective() %>%
-    add_relative_targets(matrix(0.2, ncol = 3, nrow = 5))
-  # tests
-  ## zones
-  expect_tidy_error(
-    add_separation_constraints(p, z[, -1]),
-    "zones"
-  )
-  expect_tidy_error(
-    add_separation_constraints(p, z[-1, ]),
-    "zones"
-  )
-  expect_tidy_error(
-    add_separation_constraints(p, z - 1),
-    "zones"
-  )
-  expect_tidy_error(
-    add_separation_constraints(p, z + 1),
-    "zones"
-  )
-  expect_tidy_error(
-    add_separation_constraints(p, `[<-`(z, 1, 1, NA)),
-    "zones"
-  )
-  ## data = Matrix
-  expect_tidy_error(
-    add_separation_constraints(p, z, m[-1, ]),
-    "data"
-  )
-  expect_tidy_error(
-    add_separation_constraints(p, z, m[, -1]),
-    "data"
-  )
-  expect_tidy_error(
-    add_separation_constraints(p, z, m + 1),
-    "data"
-  )
-  expect_tidy_error(
-    add_separation_constraints(p, z, `[<-`(m, 1, 2, value = NA_real_)),
-    "data"
-  )
-  expect_tidy_error(
-    add_separation_constraints(p, z, `[<-`(m, 1, 3, value = 1)),
-    "symmetric"
-  )
-  ## data = array
-  expect_tidy_error(
-    add_separation_constraints(p, z, a),
-    "NULL"
-  )
-  expect_tidy_error(
-    add_separation_constraints(p, NULL, a[-1, , , ]),
-    "data"
-  )
-  expect_tidy_error(
-    add_separation_constraints(p, NULL, a[, -1, , ]),
-    "data"
-  )
-  expect_tidy_error(
-    add_separation_constraints(p, NULL, a[, , -1, ]),
-    "data"
-  )
-  expect_tidy_error(
-    add_separation_constraints(p, NULL, a[, , , -1]),
-    "data"
-  )
-  expect_tidy_error(
-    add_separation_constraints(p, NULL, a + 1),
-    "data"
-  )
-  expect_tidy_error(
-    add_separation_constraints(p, NULL, a - 2),
-    "data"
-  )
-  expect_tidy_error(
-    add_separation_constraints(p, NULL, `[<-`(a, 1, 1, 1, 1, NA)),
-    "data"
-  )
 })

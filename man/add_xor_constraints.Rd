@@ -2,22 +2,29 @@
 % Please edit documentation in R/add_xor_constraints.R
 \name{add_xor_constraints}
 \alias{add_xor_constraints}
-\alias{add_xor_constraints,ConservationProblem,ANY,array-method}
-\alias{add_xor_constraints,ConservationProblem,ANY,matrix-method}
-\alias{add_xor_constraints,ConservationProblem,ANY,data.frame-method}
-\alias{add_xor_constraints,ConservationProblem,ANY,ANY-method}
+\alias{add_xor_constraints,ConservationProblem,ANY,ANY,array-method}
+\alias{add_xor_constraints,ConservationProblem,ANY,ANY,matrix-method}
+\alias{add_xor_constraints,ConservationProblem,ANY,ANY,data.frame-method}
+\alias{add_xor_constraints,ConservationProblem,ANY,ANY,ANY-method}
 \title{Add exclusive disjunction (xor) constraints}
 \usage{
-\S4method{add_xor_constraints}{ConservationProblem,ANY,ANY}(x, zones, data)
+\S4method{add_xor_constraints}{ConservationProblem,ANY,ANY,ANY}(x, method, zones, data)
 
-\S4method{add_xor_constraints}{ConservationProblem,ANY,data.frame}(x, zones, data)
+\S4method{add_xor_constraints}{ConservationProblem,ANY,ANY,data.frame}(x, method, zones, data)
 
-\S4method{add_xor_constraints}{ConservationProblem,ANY,matrix}(x, zones, data)
+\S4method{add_xor_constraints}{ConservationProblem,ANY,ANY,matrix}(x, method, zones, data)
 
-\S4method{add_xor_constraints}{ConservationProblem,ANY,array}(x, zones, data)
+\S4method{add_xor_constraints}{ConservationProblem,ANY,ANY,array}(x, method, zones, data)
 }
 \arguments{
 \item{x}{\code{\link[=problem]{problem()}} object.}
+
+\item{method}{\code{character} value denoting the name of the formulation
+method. Available options include the cliques (\code{"cliques"}) and
+pairwise (\code{"pairwise"}) methods. Although the cliques method generally has
+better performance, the pairwise may have better performance for
+especially large or complex problems. Note that the cliques method
+requires installation of the \pkg{igraph} package. Defaults to \code{"cliques"}.}
 
 \item{zones}{\code{matrix} or \code{Matrix} object describing the
 separation scheme for different zones. Each row and column corresponds
